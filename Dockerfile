@@ -4,12 +4,11 @@ ENV DEBIAN_FRONTEND=noninteractive
 ARG CUDA_MAJOR_VERSION=${CUDA_MAJOR_VERSION:-11}
 ARG CUDA_MINOR_VERSION=${CUDA_MINOR_VERSION:-1}
 ARG OPEN_CV_VERSION=${OPEN_CV_VERSION:-4.5.2}
-ARG APT_MIRROR=${APT_MIRROR:-https://ftp.riken.jp/Linux/ubuntu/}
 
 RUN adduser -q --gecos "" --disabled-password dev
 ENV PATH /home/dev/conda/bin:$PATH
 
-RUN sed -i -e "s!http://archive.ubuntu.com/ubuntu/!${APT_MIRROR}!" /etc/apt/sources.list && \
+RUN sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/apt/sources.list && \
     apt-get update --fix-missing -qq && apt-get install -y \
     autoconf \
     autoconf-archive \
