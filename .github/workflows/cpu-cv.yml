@@ -29,3 +29,4 @@ jobs:
           context: .
           tags: ${{ env.IMAGE_NAME }}:${{ env.TAG }}
           push: true
+          file: Dockerfile_nobuild
