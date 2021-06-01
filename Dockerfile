@@ -259,18 +259,10 @@ COPY ./jupyter_config/ /home/dev/.jupyter/lab/user-settings/@jupyterlab/
 # Laucher
 ENV LAUNCH_SCRIPT_DIR /home/dev/.local/bin
 ENV LAUNCH_SCRIPT_PATH ${LAUNCH_SCRIPT_DIR}/run_jupyter.sh
-# ENV PATH ${LAUNCH_SCRIPT_DIR}:${PATH} # Already added
-RUN mkdir -p ${LAUNCH_SCRIPT_DIR} && \
-    echo '#!/usr/bin/env bash' >> ${LAUNCH_SCRIPT_PATH} && \
-    echo 'USER_ID=${LOCAL_UID:-1000}' >> ${LAUNCH_SCRIPT_PATH} && \
-    echo 'GROUP_ID=${LOCAL_GID:-1000}' >> ${LAUNCH_SCRIPT_PATH} && \
-    echo 'PYTHONPATH=${PYTHONPATH:-/home/dev/.local/lib/python3.9/site-packages}' >> ${LAUNCH_SCRIPT_PATH} && \
-    echo 'usermod -u $USER_ID -o -m dev -d /home/dev' >> ${LAUNCH_SCRIPT_PATH} && \
-    echo 'sudo groupmod -g $GROUP_ID dev' >> ${LAUNCH_SCRIPT_PATH} && \
-    echo 'sudo -u dev -E PYTHONPATH=${PYTHONPATH} -E LD_LIBRARY_PATH=${LD_LIBRARY_PATH} /home/dev/conda/envs/research/bin/jupyter lab --no-browser' >> ${LAUNCH_SCRIPT_PATH} && \
-    chmod +x ${LAUNCH_SCRIPT_PATH}
+
+COPY ./run_jupyter.sh /home/dev/.local/bin/
+RUN chmod +x ${LAUNCH_SCRIPT_PATH}
 USER root
 EXPOSE 8888
 CMD ["run_jupyter.sh"]
 COPY ["./check_gpu.py", "./mnist.py", "/home/dev/notebooks/templates/"]
-

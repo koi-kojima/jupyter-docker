@@ -104,8 +104,10 @@ RUN jupyter lab --generate-config \
     -e "s/# c.ServerApp.allow_remote_access = False/c.ServerApp.allow_remote_access = True/" \
     -e "s:# c.ServerApp.root_dir = '':c.ServerApp.root_dir = '$NOTEBOOK_DIR':" \
     ${jupyter_lab_config} \
-    && mkdir -p ~/.jupyter/lab/user-settings/@jupyterlab 
+    && mkdir -p ~/.jupyter/lab/user-settings/@jupyterlab \
+    && mkdir -p "$NOTEBOOK_DIR"
 COPY ./jupyter_config/ /home/dev/.jupyter/lab/user-settings/@jupyterlab/
+COPY ./run_jupyter.sh /home/dev/.local/bin/
 
 USER root
 EXPOSE 8888
