@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IMAGE_NAME: ghcr.io/koi-kojima/jupyter
-      TAG: ${{ github.event.input.tag }}
+      TAG: ${{ github.event.inputs.tag }}
     steps:
       - name: Tag name chack
         run: echo "$TAG" | grep -q "cpu_cv"
