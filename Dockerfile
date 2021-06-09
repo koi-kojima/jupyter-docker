@@ -186,6 +186,7 @@ RUN CC=gcc && CXX=g++ && mkdir ~/opencv && cd ~/opencv \
              -D WITH_CUBLAS=ON \
              -D WITH_CUDA=ON \
              -D WITH_CUFFT=ON \
+             -D WITH_NVCUVID=ON \
              -D BUILD_opencv_cudaarithm=ON \
              -D BUILD_opencv_cudabgsegm=ON \
              -D BUILD_opencv_cudacodec=ON \
@@ -205,8 +206,6 @@ RUN CC=gcc && CXX=g++ && mkdir ~/opencv && cd ~/opencv \
              -D BUILD_TESTS=OFF \
              -D BUILD_PERF_TESTS=OFF \
              -D BUILD_EXAMPLES=OFF \
-             -Wno-deprecated \
-             -Wno-type-limits \
              .. \
     && make -j $(($(nproc) + 1)) \
     && make install \
