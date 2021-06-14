@@ -227,7 +227,8 @@ RUN conda config --add channels conda-forge \
     jedi jupyterlab jupyterlab-git ipywidgets \
     && conda config --add channels conda-forge \
     && conda activate research \
-    && pip install japanize-matplotlib --no-cache-dir \
+# Pip Install
+    && pip install japanize-matplotlib torchinfo --no-cache-dir \
     && conda clean -y --all &>/dev/null && chown -hR dev:dev /home/dev/conda/ \
     && echo ". /home/dev/conda/etc/profile.d/conda.sh" >> ~/.bashrc \
     && echo "conda activate research" >> ~/.bashrc

@@ -86,7 +86,8 @@ RUN mamba install --yes -c pytorch -c nvidia -c conda-forge \
     jedi jupyterlab jupyterlab-git ipywidgets \
     && conda config --add channels conda-forge \
     && conda activate research \
-    && pip install opencv-python japanize-matplotlib --no-cache-dir \
+# Pip Install
+    && pip install opencv-python japanize-matplotlib torchinfo --no-cache-dir \
     && conda clean -y --all &>/dev/null && chown -hR dev:dev /home/dev/conda/ \
     && echo ". /home/dev/conda/etc/profile.d/conda.sh" >> ~/.bashrc \
     && echo "conda activate research" >> ~/.bashrc
