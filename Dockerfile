@@ -1,8 +1,8 @@
-FROM nvidia/cuda:11.1-cudnn8-devel-ubuntu20.04
-
-ENV DEBIAN_FRONTEND=noninteractive
 ARG CUDA_MAJOR_VERSION=${CUDA_MAJOR_VERSION:-11}
 ARG CUDA_MINOR_VERSION=${CUDA_MINOR_VERSION:-1}
+FROM nvidia/cuda:${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION}-cudnn8-devel-ubuntu20.04
+
+ENV DEBIAN_FRONTEND=noninteractive
 ARG OPEN_CV_VERSION=${OPEN_CV_VERSION:-4.5.2}
 
 RUN adduser -q --gecos "" --disabled-password dev
@@ -254,15 +254,15 @@ RUN jupyter lab --generate-config \
     -e "s:# c.ServerApp.root_dir = '':c.ServerApp.root_dir = '$NOTEBOOK_DIR':" \
     ${jupyter_lab_config} \
     && mkdir -p ~/.jupyter/lab/user-settings/@jupyterlab 
-COPY ./jupyter_config/ /home/dev/.jupyter/lab/user-settings/@jupyterlab/
+COPY --chown=dev:dev ["./check_gpu.py", "./mnist.py", "/home/dev/notebooks/templates/"]
+COPY --chown=dev:dev ./jupyter_config/ /home/dev/.jupyter/lab/user-settings/@jupyterlab/
 
 # Laucher
 ENV LAUNCH_SCRIPT_DIR /home/dev/.local/bin
 ENV LAUNCH_SCRIPT_PATH ${LAUNCH_SCRIPT_DIR}/run_jupyter.sh
+COPY --chown=dev:dev ./run_jupyter.sh /home/dev/.local/bin/
 
-COPY ./run_jupyter.sh /home/dev/.local/bin/
 RUN chmod +x ${LAUNCH_SCRIPT_PATH}
 USER root
 EXPOSE 8888
 CMD ["run_jupyter.sh"]
-COPY ["./check_gpu.py", "./mnist.py", "/home/dev/notebooks/templates/"]

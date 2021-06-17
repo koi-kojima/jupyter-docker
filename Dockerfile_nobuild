@@ -1,13 +1,11 @@
-FROM nvidia/cuda:11.1-cudnn8-runtime-ubuntu20.04
-
-ENV DEBIAN_FRONTEND=noninteractive
 ARG CUDA_MAJOR_VERSION=${CUDA_MAJOR_VERSION:-11}
 ARG CUDA_MINOR_VERSION=${CUDA_MINOR_VERSION:-1}
+FROM nvidia/cuda:${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION}-cudnn8-runtime-ubuntu20.04
 
-RUN adduser -q --gecos "" --disabled-password dev
-ENV PATH /home/dev/conda/bin:$PATH
+ENV DEBIAN_FRONTEND=noninteractive
 
-RUN sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/apt/sources.list && \
+RUN adduser -q --gecos "" --disabled-password dev && \
+    sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/apt/sources.list && \
     apt-get update --fix-missing -qq && apt-get install -y \
     curl \
     gmp-ecm \
@@ -36,7 +34,6 @@ RUN sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/a
     x264 \
     xvfb \
     zip \
-    zlib1g-dev \
     zsh \
     --no-install-recommends \
     && apt-get clean \
@@ -66,6 +63,7 @@ SHELL ["/bin/bash", "-l", "-c"]
 USER dev
 WORKDIR /home/dev
 ENV HOME /home/dev
+ENV PATH /home/dev/conda/bin:$PATH
 ENV PATH $HOME/.local/bin:$PATH
 ENV PATH $PATH:/home/dev/conda/envs/research/bin
 # Install Python library
@@ -73,7 +71,7 @@ RUN mamba install --yes -c pytorch -c nvidia -c conda-forge \
     pytorch \
     cudatoolkit=11.1 \
     torchvision \
-    torchaudio \
+    # torchaudio \
     && mamba install --yes -c conda-forge \
     scipy \
     sympy \
@@ -108,8 +106,8 @@ RUN jupyter lab --generate-config \
     && mkdir -p ~/.jupyter/lab/user-settings/@jupyterlab \
     && mkdir -p "$NOTEBOOK_DIR" \
     && mkdir -p /home/dev/.local/bin/
-COPY ./jupyter_config/ /home/dev/.jupyter/lab/user-settings/@jupyterlab/
-COPY ./run_jupyter.sh /home/dev/.local/bin/
+COPY --chown=dev:dev ./jupyter_config/ /home/dev/.jupyter/lab/user-settings/@jupyterlab/
+COPY --chown=dev:dev ./run_jupyter.sh /home/dev/.local/bin/
 
 USER root
 EXPOSE 8888
