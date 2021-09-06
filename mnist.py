@@ -29,13 +29,13 @@ def main(device: torch.device, mini_batch: int, is_gpu: bool) -> None:
         root="./data", train=True, download=True, transform=transform
     )
     train_loader = torch.utils.data.DataLoader(
-        train, batch_size=mini_batch, shuffle=True, num_workers=workers, pin_memory=True
+        train, batch_size=mini_batch, shuffle=True, num_workers=workers, pin_memory=False
     )
     test = torchvision.datasets.QMNIST(
         root="./data", train=False, download=True, transform=transform
     )
     test_loader = torch.utils.data.DataLoader(
-        test, batch_size=mini_batch, shuffle=False, num_workers=workers, pin_memory=True
+        test, batch_size=mini_batch, shuffle=False, num_workers=workers, pin_memory=False
     )
     train_and_evaluate(device, is_gpu, train_loader, test_loader)
 
@@ -122,7 +122,7 @@ def train_and_evaluate(device: torch.device, is_gpu: bool,
                 test_accuracy_log.append(test_correct / test_total)
                 test_loss_log.append(test_loss)
                 test_epochs.append(epoch)
-            tqdm.write(f"[{epoch=}] loss={rl:.3f} test={test_loss:.3f} "
+            tqdm.write(f"[epoch={epoch + 1}] loss={rl:.3f} test={test_loss:.3f} "
                        f"correct={_correct} total={_total}")
     took = time.time() - started
     _print(f"Learning {N} steps took {took}, average={took / N}.", "Result")
