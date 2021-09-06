@@ -3,7 +3,7 @@ ARG CUDA_MINOR_VERSION=${CUDA_MINOR_VERSION:-1}
 FROM nvidia/cuda:${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION}-cudnn8-devel-ubuntu20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
-ARG OPEN_CV_VERSION=${OPEN_CV_VERSION:-4.5.2}
+ARG OPEN_CV_VERSION=${OPEN_CV_VERSION:-4.5.3}
 
 RUN adduser -q --gecos "" --disabled-password dev
 ENV PATH /home/dev/conda/bin:$PATH
