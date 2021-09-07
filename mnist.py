@@ -2,6 +2,7 @@
 import os
 import sys
 import time
+import argparse
 
 # Graph
 import matplotlib.pyplot as plt
@@ -48,15 +49,19 @@ class Net(nn.Module):
         self.pool1 = nn.MaxPool2d(2, 2)  # 24x24x64 -> 12x12x64
         self.dropout1 = nn.Dropout2d()
         self.fc1 = nn.Linear(12 * 12 * 64, 256)
-        self.dropout2 = nn.Dropout2d()
+        self.dropout2 = nn.Dropout(p=0.3)
         self.fc2 = nn.Linear(256, 10)
 
-    def forward(self, x):
+    def feature(self, x):
         x = F.relu(self.conv1(x))
         x = self.pool1(F.relu(self.conv2(x)))
         x = self.dropout1(x)
         x = F.relu(self.fc1(x.view(-1, 12 * 12 * 64)))
         x = self.dropout2(x)
+        return x
+
+    def forward(self, x):
+        x = self.feature(x)
         x = self.fc2(x)
         return x
 
@@ -118,7 +123,8 @@ def train_and_evaluate(device: torch.device, is_gpu: bool,
         accuracy_log.append(_correct / _total)
         if epoch % 20 == 19 or epoch < 5:
             with torch.no_grad():
-                test_total, test_correct, test_loss = evaluate(device, net, is_gpu, loss_func, test_loader, True)
+                test_total, test_correct, test_loss = evaluate(
+                    device, net, is_gpu, loss_func, test_loader, True)
                 test_accuracy_log.append(test_correct / test_total)
                 test_loss_log.append(test_loss)
                 test_epochs.append(epoch)
@@ -127,11 +133,14 @@ def train_and_evaluate(device: torch.device, is_gpu: bool,
     took = time.time() - started
     _print(f"Learning {N} steps took {took}, average={took / N}.", "Result")
 
-    make_graph(N, accuracy_log, device, loss_log, test_accuracy_log, test_epochs, test_loss_log)
+    make_graph(N, accuracy_log, device, loss_log,
+               test_accuracy_log, test_epochs, test_loss_log)
     started = time.time()
     with torch.no_grad():
-        train_total, train_correct = evaluate(device, net, is_gpu, loss_func, train_loader)
-        test_total, test_correct = evaluate(device, net, is_gpu, loss_func, test_loader)
+        train_total, train_correct = evaluate(
+            device, net, is_gpu, loss_func, train_loader)
+        test_total, test_correct = evaluate(
+            device, net, is_gpu, loss_func, test_loader)
         _print(
             f"Evaluation took {time.time() - started}.\n"
             f"Train Accuracy {train_correct / train_total:.3f} ({train_correct=}, {train_total=})\n"
@@ -148,7 +157,8 @@ def make_graph(epochs, accuracy_log, device, loss_log, test_accuracy_log, test_e
     ax1.plot(test_epochs, test_loss_log, label="TEST Loss", ls="dashed")
     ax1.set_ylabel("Loss")
     ax1.set_xlabel("Epoch")
-    ax2.plot(range(epochs), accuracy_log, label="TRAIN Accuracy", color="green")
+    ax2.plot(range(epochs), accuracy_log,
+             label="TRAIN Accuracy", color="green")
     ax2.plot(test_epochs, test_accuracy_log, label="TEST Accuracy",
              color="purple", ls="dashed")
     ax2.set_ylim(min(min(accuracy_log), min(test_accuracy_log)) * 0.95, 1)
@@ -162,23 +172,22 @@ def make_graph(epochs, accuracy_log, device, loss_log, test_accuracy_log, test_e
 
 
 if __name__ == '__main__':
-    if len(sys.argv) <= 1:
-        print("Usage - ./mnist.py [cpu|gpu]")
-        exit(1)
-    _device_name = sys.argv[1]
-    _batch = 128
-    _is_gpu = False
-    if _device_name.lower() == "gpu":
-        if torch.cuda.is_available():
-            print("GPU is supported and selected.")
-            _d = torch.device("cuda:0")
-            _batch = 512
-            _is_gpu = True
-        else:
-            print("GPU is NOT supported. Using CPU.")
-            _d = torch.device("cpu")
-    elif _device_name.lower() == "cpu":
-        if torch.cuda.is_available():
+    parser = argparse.ArgumentParser(description="Run MNIST.")
+    parser.add_argument(
+        "device", choices=["gpu", "cpu"], help="device where program works", )
+    parser.add_argument("batch", type=int, help="batch size (default=512)", default=512)
+    args = parser.parse_args()
+
+    is_cuda_available = torch.cuda.is_available()
+    is_gpu = args.device == "gpu"
+    if is_gpu and is_cuda_available:
+        print("GPU is supported and selected.")
+        _d = torch.device("cuda:0")
+    elif is_gpu and not is_cuda_available:
+        print("GPU is NOT supported. Using CPU.")
+        _d = torch.device("cpu")
+    else:
+        if is_cuda_available:
             print("GPU is supported but CPU is manually selected.")
         else:
             print("GPU is NOT supported. CPU is selected.")
@@ -186,9 +195,6 @@ if __name__ == '__main__':
         torch.set_num_threads(os.cpu_count())
         torch.set_num_interop_threads(os.cpu_count())
         _print(torch.__config__.parallel_info(), "Parallel Info")
-    else:
-        raise ValueError(f"Unknown device, {_device_name}.")
-    if len(sys.argv) > 2:
-        _batch = int(sys.argv[2])
-    print(f"Device={_d}, Batch Size={_batch}")
-    main(_d, _batch, _is_gpu)
+
+    print(f"Device={_d}, Batch Size={args.batch}")
+    main(_d, args.batch, is_gpu)
