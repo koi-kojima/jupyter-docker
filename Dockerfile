@@ -90,12 +90,14 @@ RUN sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/a
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 EXPOSE 22
 
-# SSH setting
+# SSH abd sudo setting
 RUN sed -i -e "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" \
            -e "s/#PermitEmptyPasswords no/PermitEmptyPasswords yes/" \
            /etc/ssh/sshd_config && \
     sed -i -e "s/root:x:/root::/g" -e "s/dev:x:/dev::/g" /etc/passwd && \
-    mkdir /run/sshd
+    mkdir /run/sshd && \
+    echo dev ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/dev && \
+    chmod 0440 /etc/sudoers.d/dev
 
 # Install Miniconda
 RUN curl -L -sS -o /home/dev/miniconda.sh "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh" \
