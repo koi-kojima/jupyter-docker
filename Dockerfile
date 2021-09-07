@@ -225,6 +225,7 @@ RUN conda config --append channels defaults \
        seaborn \
        scikit-learn \
        scikit-image \
+       tqdm \
        jedi jupyterlab jupyterlab-git ipywidgets \
     && conda config --remove channels defaults \
     && conda activate research \
