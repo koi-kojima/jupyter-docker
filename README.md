@@ -32,25 +32,26 @@ Both images are based on cuda11.1 and cudnn8 from nvidia image, so PyTorch can u
 * Image
   * OepnCV
     * With CUDA("-cuda" postfix version)
-    * Without CUDA("-cpu_cv")
+    * Without CUDA("-cpu\_cv")
   * Pillow
   * scikit-image
 * Machine Learning
   * scikit-learn
   * PyTorch(with CUDA)
   * torchvision
-  * torchaudio("-cpu_cv" only)
+  * torchaudio("-cpu\_cv" only)
 
 ## How to use
 
 ### Jupyter Lab
-```docker run -it \
-              --gpus all \
-              --name "jupyter.$USER" \
-              --env LOCAL_UID=$(id $USER --user) \
-              --env LOCAL_GID=$(id $USER --group) \
-              -p 8888 \
-              ghcr.io/koi-kojima/jupyter:v7.8-cuda
+```
+docker run -it \
+           --gpus all \
+           --name "jupyter.$USER" \
+           --env LOCAL_UID=$(id $USER --user) \
+           --env LOCAL_GID=$(id $USER --group) \
+           -p 8888 \
+           ghcr.io/koi-kojima/jupyter:v7.8-cuda
 ```
 
 Execute `docker ps` to see the port to access jupyter in docker.
@@ -59,7 +60,7 @@ Execute `docker ps` to see the port to access jupyter in docker.
 `docker run -d --gpus all --name "ssh.$USER" -p 8888 ghcr.io/koi-kojima/jupyter:v7.8-cuda /usr/sbin/sshd -D`
 
 DO NOT run with `-it`.
-The sshd process doesn't accept any inputs (even Ctr-D or Ctr-C) so you can't do anything.
+The sshd process doesn't accept any inputs (even Ctrl-D or Ctrl-C) so you can't do anything.
 
 ## Improvements
 
@@ -75,7 +76,7 @@ The sshd process doesn't accept any inputs (even Ctr-D or Ctr-C) so you can't do
 * SSH server
   * Start by executing `/usr/sbin/sshd` or `/usr/sbin/sshd -D`.
   * The second is useful if you want to start container with the command.
-  * "-cpu_cv" image will start ssh server in default.
+  * "-cpu\_cv" image will start ssh server in default.
 * User permission
   * When the lab starts, the script will execute `usermod` command to change id of user in container. It will solve permission problem if you bind local file into container. ("-cuda" only)
 
