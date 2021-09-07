@@ -88,7 +88,6 @@ RUN sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/a
     --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
-EXPOSE 22
 
 # SSH abd sudo setting
 RUN sed -i -e "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" \
@@ -266,5 +265,8 @@ COPY --chown=dev:dev ./run_jupyter.sh /home/dev/.local/bin/
 
 RUN chmod +x ${LAUNCH_SCRIPT_PATH}
 USER root
+# For Jupyter
 EXPOSE 8888
+# For SSH
+EXPOSE 22
 CMD ["run_jupyter.sh"]
