@@ -99,13 +99,13 @@ RUN sed -i -e "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" \
     echo dev ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/dev && \
     chmod 0440 /etc/sudoers.d/dev
 
-# Install Miniconda
-RUN curl -L -sS -o /home/dev/miniconda.sh "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh" \
-    && sudo -u dev --login /bin/bash /home/dev/miniconda.sh -b -p /home/dev/conda \
-    && rm /home/dev/miniconda.sh \
+# Install miniforge
+RUN curl -L -sS -o /home/dev/miniforge.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh" \
+    && sudo -u dev --login /bin/bash /home/dev/miniforge.sh -b -p /home/dev/conda \
+    && rm /home/dev/miniforge.sh \
     && ln -s /home/dev/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
     && sudo -u dev --login /home/dev/conda/bin/conda update conda --quiet --yes >/dev/null \
-    && sudo -u dev --login /home/dev/conda/bin/conda create --yes -n research -c conda-forge python=3.9 numpy \
+    && sudo -u dev --login /home/dev/conda/bin/conda create --yes -n research python=3.9 numpy \
     && sudo -u dev --login /home/dev/conda/bin/conda clean --yes --index-cache >/dev/null \
     && echo ". /home/dev/conda/etc/profile.d/conda.sh" >> ~/.bashrc \
     && echo "conda activate research" >> ~/.bashrc \
@@ -214,24 +214,24 @@ RUN CC=gcc && CXX=g++ && mkdir ~/opencv && cd ~/opencv \
     && rm ~/opencv/${OPEN_CV_VERSION}.zip ~/opencv/opencv_contrib-${OPEN_CV_VERSION}.zip
 
 # Install Python library
-RUN conda config --add channels conda-forge \ 
-    && conda install --yes -n research -c pytorch -c conda-forge \
-    pytorch torchvision cudatoolkit=11.1 \
-    mamba \
-    scipy \
-    sympy \
-    pandas \
-    openpyxl \
-    pytables \
-    seaborn \
-    scikit-learn \
-    scikit-image \
-    jedi jupyterlab jupyterlab-git ipywidgets \
-    && conda config --add channels conda-forge \
+# Default channel is required to install latest version of torchvision.
+RUN conda config --append channels defaults \
+    && mamba install --yes -n research -c pytorch -c nvidia \
+       pytorch torchvision cudatoolkit=11.1 \
+       scipy \
+       sympy \
+       pandas \
+       openpyxl \
+       pytables \
+       seaborn \
+       scikit-learn \
+       scikit-image \
+       jedi jupyterlab jupyterlab-git ipywidgets \
+    && conda config --remove channels defaults \
     && conda activate research \
 # Pip Install
     && pip install japanize-matplotlib torchinfo --no-cache-dir \
-    && conda clean -y --all &>/dev/null && chown -hR dev:dev /home/dev/conda/ \
+    && mamba clean -y --all &>/dev/null && chown -hR dev:dev /home/dev/conda/ \
     && echo ". /home/dev/conda/etc/profile.d/conda.sh" >> ~/.bashrc \
     && echo "conda activate research" >> ~/.bashrc
 ENV PATH $PATH:/home/dev/conda/envs/research/bin
