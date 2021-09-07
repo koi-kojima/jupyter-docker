@@ -1,13 +1,16 @@
 # jupyter-docker
+
 Docker image of jupyterlab with PyTorch
 
 ## Tag List
+
 See https://github.com/users/koi-kojima/packages/container/package/jupyter
 
 Postfix "cuda" means opencv is built with cuda. "cpu_cv" means the image uses prebuild opencv provided via [pip](https://pypi.org/project/opencv-python/).
 Both images are based on cuda11.1 and cudnn8 from nvidia image, so PyTorch can use gpus in both images.
 
 ## Installed Libraries
+
 * Python 3.9
 * Anaconda
 * Numelic
@@ -38,7 +41,28 @@ Both images are based on cuda11.1 and cudnn8 from nvidia image, so PyTorch can u
   * torchvision
   * torchaudio("-cpu_cv" only)
 
+## How to use
+
+### Jupyter Lab
+```docker run -it \
+              --gpus all \
+              --name "jupyter.$USER" \
+              --env LOCAL_UID=$(id $USER --user) \
+              --env LOCAL_GID=$(id $USER --group) \
+              -p 8888 \
+              ghcr.io/koi-kojima/jupyter:v7.8-cuda
+```
+
+Execute `docker ps` to see the port to access jupyter in docker.
+
+### SSH
+`docker run -d --gpus all --name "ssh.$USER" -p 8888 ghcr.io/koi-kojima/jupyter:v7.8-cuda /usr/sbin/sshd -D`
+
+DO NOT run with `-it`.
+The sshd process doesn't accept any inputs (even Ctr-D or Ctr-C) so you can't do anything.
+
 ## Improvements
+
 * Font of terminal in Jupyter Lab
   * Changed to DejaVu Sans Mono or something.
 * Allow root in default.
