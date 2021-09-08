@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-if [ -z "${LOCAL_UID}"] ; then
+if [ -z "${LOCAL_UID}" ] ; then
   USER_ID=$(id dev --user)
 else
   USER_ID=${LOCAL_UID:-1000}
