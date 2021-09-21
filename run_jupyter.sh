@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 if [ -z "${LOCAL_UID}" ] ; then
   USER_ID=$(id dev --user)
 else
@@ -15,7 +16,7 @@ PYTHONPATH=${PYTHONPATH:-/home/dev/.local/lib/python3.9/site-packages}
 /usr/sbin/sshd
 
 if [ "${USER_ID}" != "$(id dev --user)" ] ; then
-  usermod --uid $USER_ID --non-unique --move-home --home /home/dev dev
+  usermod --uid $USER_ID --non-unique dev
 fi
 if [ "${GROUP_ID}" != "$(id dev --group)" ] ; then
   sudo groupmod --gid $GROUP_ID --non-unique dev
