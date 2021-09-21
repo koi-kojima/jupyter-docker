@@ -222,6 +222,7 @@ RUN conda config --append channels defaults \
        pandas \
        openpyxl \
        pytables \
+       h5py \
        seaborn \
        scikit-learn \
        scikit-image \
