@@ -19,6 +19,7 @@ Both images are based on cuda11.1 and cudnn8 from nvidia image, so PyTorch can u
 * Table
   * [pandas](https://pandas.pydata.org/docs/index.html)
   * [PyTables](https://pypi.org/project/tables/)
+  * [h5py](https://docs.h5py.org/en/stable/)
   * [openpyxl](https://openpyxl.readthedocs.io/en/stable/)
 * Graph
   * [matplotlib](https://matplotlib.org/stable/api/index.html)
