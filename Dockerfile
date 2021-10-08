@@ -228,6 +228,7 @@ RUN conda config --append channels defaults \
        scikit-image \
        tqdm \
        jedi jupyterlab jupyterlab-git ipywidgets \
+       pylint autopep8 \
     && conda config --remove channels defaults \
     && conda activate research \
 # Pip Install
