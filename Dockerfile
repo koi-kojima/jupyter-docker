@@ -1,5 +1,5 @@
 ARG CUDA_MAJOR_VERSION=${CUDA_MAJOR_VERSION:-11}
-ARG CUDA_MINOR_VERSION=${CUDA_MINOR_VERSION:-1}
+ARG CUDA_MINOR_VERSION=${CUDA_MINOR_VERSION:-3}
 FROM nvidia/cuda:${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION}-cudnn8-devel-ubuntu20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -216,7 +216,7 @@ RUN CC=gcc && CXX=g++ && mkdir ~/opencv && cd ~/opencv \
 # Default channel is required to install latest version of torchvision.
 RUN conda config --append channels defaults \
     && mamba install --yes -n research -c pytorch -c nvidia \
-       pytorch torchvision cudatoolkit=11.1 \
+       pytorch torchvision cudatoolkit=${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} \
        scipy \
        sympy \
        pandas \
