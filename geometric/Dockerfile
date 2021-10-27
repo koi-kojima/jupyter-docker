@@ -9,7 +9,7 @@ RUN apt-get update --fix-missing -qq && apt-get install -y --no-install-recommen
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 USER dev
-# Install PyTorch Geometric and PyRAML
+# Install PyTorch Geometric and PyYAML
 RUN conda activate research && \
     mamba install -c pyg -c conda-forge -y pyg && \
     pip install PyYAML nose --no-cache-dir && \
