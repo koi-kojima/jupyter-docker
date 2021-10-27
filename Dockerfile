@@ -246,17 +246,25 @@ ENV NOTEBOOK_DIR /home/dev/notebooks
 ENV DEFAULT_TEMPLATE_DIR ${NOTEBOOK_DIR}/templates
 ENV HOST_TEMPLATE_DIR ${NOTEBOOK_DIR}/host/templates
 RUN jupyter lab --generate-config \
+    && jupyter notebook --generate-config \
     && jupyter_lab_config=$(jupyter --config-dir)/jupyter_lab_config.py \
+    && jupyter_notebook_config=$(jupyter --config-dir)/jupyter_notebook_config.py \
     && mkdir -p ${DEFAULT_TEMPLATE_DIR} \
     && echo "c.ContentsManager.allow_hidden = True" >> ${jupyter_lab_config} \
     && echo "c.FileContentsManager.allow_hidden = True" >> ${jupyter_lab_config} \
     && echo "c.ServerApp.tornado_settings = {'shell_command': ['bash']}" >> ${jupyter_lab_config} \
     && sed -i \
     -e "s/# c.ServerApp.ip = 'localhost'/c.ServerApp.ip = '0.0.0.0'/" \
+    -e "s/# c.NotebookApp.ip = 'localhost'/c.NotebookApp.ip = '0.0.0.0'/" \
     -e "s/# c.ServerApp.allow_root = False/c.ServerApp.allow_root = True/" \
+    -e "s/# c.NotebookApp.allow_root = False/c.NotebookApp.allow_root = True/" \
     -e "s/# c.ServerApp.allow_remote_access = False/c.ServerApp.allow_remote_access = True/" \
+    -e "s/# c.NotebookApp.allow_remote_access = False/c.NotebookApp.allow_remote_access = True/" \
     -e "s:# c.ServerApp.root_dir = '':c.ServerApp.root_dir = '$NOTEBOOK_DIR':" \
-    ${jupyter_lab_config} \
+    -e "s:# c.NotebookApp.root_dir = '':c.NotebookApp.root_dir = '$NOTEBOOK_DIR':" \
+    -e "s/# c.ContentsManager.allow_hidden = False/c.ContentsManager.allow_hidden = True/" \
+    -e "s/# c.FileContentsManager.allow_hidden = False/c.FileContentsManager.allow_hidden = True/" \
+    ${jupyter_lab_config} ${jupyter_notebook_config} \
     && mkdir -p ~/.jupyter/lab/user-settings/@jupyterlab 
 COPY --chown=dev:dev ["./check_gpu.py", "./mnist.py", "/home/dev/notebooks/templates/"]
 COPY --chown=dev:dev ./jupyter_config/ /home/dev/.jupyter/lab/user-settings/@jupyterlab/
