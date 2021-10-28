@@ -264,6 +264,8 @@ RUN jupyter lab --generate-config \
     -e "s:# c.NotebookApp.root_dir = '':c.NotebookApp.root_dir = '$NOTEBOOK_DIR':" \
     -e "s/# c.ContentsManager.allow_hidden = False/c.ContentsManager.allow_hidden = True/" \
     -e "s/# c.FileContentsManager.allow_hidden = False/c.FileContentsManager.allow_hidden = True/" \
+    -e "s/# c.NotebookApp.open_browser = True/c.NotebookApp.open_browser = False/" \
+    -e "s/# c.LabServerApp.open_browser = True/c.LabServerApp.open_browser = False/" \
     ${jupyter_lab_config} ${jupyter_notebook_config} \
     && mkdir -p ~/.jupyter/lab/user-settings/@jupyterlab 
 COPY --chown=dev:dev ["./check_gpu.py", "./mnist.py", "/home/dev/notebooks/templates/"]
