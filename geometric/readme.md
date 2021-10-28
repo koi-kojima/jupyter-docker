@@ -1,8 +1,9 @@
 # Jupyter Docker Geometric
 
 ## Installed libraries
-* PyTorch Geometric
-* PyMesh
+* [PyTorch Geometric](https://github.com/pyg-team/pytorch_geometric)
+* [PyMesh](https://github.com/PyMesh/PyMesh)
+* [PD-MeshNet](https://github.com/MIT-SPARK/PD-MeshNet)
 
 ## Docker image
 `ghcr.io/koi-kojima/jupyter/geometric`
