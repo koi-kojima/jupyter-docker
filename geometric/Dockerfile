@@ -30,4 +30,4 @@ RUN conda activate research && \
     git clone --depth=1 https://github.com/MIT-SPARK/PD-MeshNet.git meshnet && \
     cd meshnet && \
     pip install -e .
-
+USER root
