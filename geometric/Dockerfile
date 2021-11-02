@@ -24,7 +24,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update > /dev/null && \
     apt-get install --no-install-recommends --yes \
         wget bzip2 ca-certificates \
-        automake cmake curl opencv-data unzip vim \
+        automake curl opencv-data unzip vim \
         g++ gcc make \
         libgmp-dev libmpfr-dev libgmpxx4ldbl libboost-all-dev \
         libgl1-mesa-glx libglfw3 \
@@ -45,6 +45,15 @@ RUN apt-get update > /dev/null && \
     echo ". ${CONDA_DIR}/etc/profile.d/conda.sh && conda activate base" >> ~/.bashrc
 
 ENTRYPOINT ["tini", "--"]
+
+# Update CMake
+RUN cd /root && \
+    curl -o cmake_script.sh -L https://github.com/Kitware/CMake/releases/download/v3.21.4/cmake-3.21.4-linux-x86_64.sh && \
+    chmod +x ./cmake_script.sh && \
+    mkdir /opt/cmake && \
+    ./cmake_script.sh --skip-license --prefix=/opt/cmake
+
+ENV PATH=/opt/cmake/bin:${PATH}
 
 # Downgrade Python
 RUN mamba install python=3.8 -y
@@ -80,7 +89,7 @@ RUN cd /root && \
 
 # Install PyMesh
 RUN cd /root && \
-    pip install git+git://github.com/PyMesh/PyMesh.git@93d182c0a7cee446e89fac74033347d900054af4
+    pip install git+https://github.com/PyMesh/PyMesh.git@93d182c0a7cee446e89fac74033347d900054af4
 
 # Install PD-MeshNet
 RUN cd /root && \
