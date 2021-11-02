@@ -51,7 +51,8 @@ RUN cd /root && \
     curl -o cmake_script.sh -L https://github.com/Kitware/CMake/releases/download/v3.21.4/cmake-3.21.4-linux-x86_64.sh && \
     chmod +x ./cmake_script.sh && \
     mkdir /opt/cmake && \
-    ./cmake_script.sh --skip-license --prefix=/opt/cmake
+    ./cmake_script.sh --skip-license --prefix=/opt/cmake %% \
+    rm ./cmake_script.sh
 
 ENV PATH=/opt/cmake/bin:${PATH}
 
@@ -96,3 +97,5 @@ RUN cd /root && \
     git clone --depth=1 https://github.com/MIT-SPARK/PD-MeshNet.git meshnet && \
     cd meshnet && \
     pip install -e .
+
+COPY test_code.sh /root
