@@ -1,5 +1,6 @@
 set -eux
 
+
 curl -L -O https://www.dropbox.com/s/rip0mhsytvt14mh/pretrained_models_pd_mesh_net.zip
 unzip pretrained_models_pd_mesh_net.zip
 export DATASET_FOLDER=~/datasets
