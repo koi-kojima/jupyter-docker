@@ -280,11 +280,12 @@ COPY ./jupyter_config/ /home/dev/.jupyter/lab/user-settings/@jupyterlab/
 # Laucher
 ENV LAUNCH_SCRIPT_DIR /home/dev/.local/bin
 ENV LAUNCH_SCRIPT_PATH ${LAUNCH_SCRIPT_DIR}/run_jupyter.sh
-COPY ./run_jupyter.sh /home/dev/.local/bin/
+COPY ./run_jupyter.sh ./entry.sh /home/dev/.local/bin/
 
 RUN chmod +x ${LAUNCH_SCRIPT_PATH} \
-    && chmod +rw -R /home/dev/notebooks \
-    && chmod +rw -R /home/dev/.jupyter
+    && chmod 777 -R /home/dev/notebooks \
+    && chmod 777 -R /home/dev/.jupyter \
+    && chmod 777 -R /home/dev/.local
 # For Jupyter
 EXPOSE 8888
 # For SSH
