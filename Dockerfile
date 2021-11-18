@@ -102,6 +102,10 @@ RUN sed -i -e "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" \
     echo dev ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/dev && \
     chmod 0440 /etc/sudoers.d/dev
 
+# Copy initial scripts
+RUN mv /root/.bashrc /root/.profile /home/dev/ \
+    && chmod 777 /home/dev/.bashrc /home/dev/.profile
+
 # Install miniforge
 RUN umask 000 \
     && curl -L -sS -o /home/dev/miniforge.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh" \
