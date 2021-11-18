@@ -7,7 +7,7 @@ ARG CUDA_MINOR_VERSION=${CUDA_MINOR_VERSION:-3}
 ENV DEBIAN_FRONTEND=noninteractive
 ARG OPEN_CV_VERSION=${OPEN_CV_VERSION:-4.5.3}
 
-RUN mkdir /home/dev && umask 000
+RUN umask 000 && mkdir /home/dev 
 WORKDIR /home/dev
 ENV PATH /home/dev/conda/bin:$PATH
 ENV HOME /home/dev
