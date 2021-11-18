@@ -34,5 +34,5 @@ else
 		-E PYTHONPATH=${PYTHONPATH} \
 		-E LD_LIBRARY_PATH=${LD_LIBRARY_PATH} \
 		/home/dev/conda/envs/research/bin/jupyter lab --no-browser
-
 fi
+

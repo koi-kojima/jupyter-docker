@@ -246,7 +246,7 @@ ENV NOTEBOOK_DIR /home/dev/notebooks
 ENV DEFAULT_TEMPLATE_DIR ${NOTEBOOK_DIR}/templates
 ENV HOST_TEMPLATE_DIR ${NOTEBOOK_DIR}/host/templates
 RUN jupyter lab --generate-config \
-    && jupyter notebook --generate-config \
+    # && jupyter notebook --generate-config \
     && jupyter_lab_config=$(jupyter --config-dir)/jupyter_lab_config.py \
     && jupyter_notebook_config=$(jupyter --config-dir)/jupyter_notebook_config.py \
     && mkdir -p ${DEFAULT_TEMPLATE_DIR} \
@@ -266,7 +266,8 @@ RUN jupyter lab --generate-config \
     -e "s/# c.FileContentsManager.allow_hidden = False/c.FileContentsManager.allow_hidden = True/" \
     -e "s/# c.NotebookApp.open_browser = True/c.NotebookApp.open_browser = False/" \
     -e "s/# c.LabServerApp.open_browser = True/c.LabServerApp.open_browser = False/" \
-    ${jupyter_lab_config} ${jupyter_notebook_config} \
+    ${jupyter_lab_config} \
+    # ${jupyter_notebook_config} \
     && mkdir -p ~/.jupyter/lab/user-settings/@jupyterlab 
 COPY --chown=dev:dev ["./check_gpu.py", "./mnist.py", "/home/dev/notebooks/templates/"]
 COPY --chown=dev:dev ./jupyter_config/ /home/dev/.jupyter/lab/user-settings/@jupyterlab/
