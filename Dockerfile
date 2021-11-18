@@ -1,12 +1,16 @@
 ARG CUDA_MAJOR_VERSION=${CUDA_MAJOR_VERSION:-11}
 ARG CUDA_MINOR_VERSION=${CUDA_MINOR_VERSION:-3}
 FROM nvidia/cuda:11.3.1-cudnn8-devel-ubuntu20.04
+ARG CUDA_MAJOR_VERSION=${CUDA_MAJOR_VERSION:-11}
+ARG CUDA_MINOR_VERSION=${CUDA_MINOR_VERSION:-3}
 
 ENV DEBIAN_FRONTEND=noninteractive
 ARG OPEN_CV_VERSION=${OPEN_CV_VERSION:-4.5.3}
 
-RUN adduser -q --gecos "" --disabled-password dev
+RUN mkdir /home/dev && umask 000
+WORKDIR /home/dev
 ENV PATH /home/dev/conda/bin:$PATH
+ENV HOME /home/dev
 
 RUN sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/apt/sources.list && \
     apt-get update --fix-missing -qq && apt-get install -y \
@@ -93,27 +97,24 @@ RUN sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/a
 RUN sed -i -e "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" \
            -e "s/#PermitEmptyPasswords no/PermitEmptyPasswords yes/" \
            /etc/ssh/sshd_config && \
-    sed -i -e "s/root:x:/root::/g" -e "s/dev:x:/dev::/g" /etc/passwd && \
+    sed -i -e "s/root:x:/root::/g" /etc/passwd && \
     mkdir /run/sshd && \
     echo dev ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/dev && \
     chmod 0440 /etc/sudoers.d/dev
 
 # Install miniforge
 RUN curl -L -sS -o /home/dev/miniforge.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh" \
-    && sudo -u dev --login /bin/bash /home/dev/miniforge.sh -b -p /home/dev/conda \
+    && /bin/bash /home/dev/miniforge.sh -b -p /home/dev/conda \
     && rm /home/dev/miniforge.sh \
     && ln -s /home/dev/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
-    && sudo -u dev --login /home/dev/conda/bin/conda update conda --quiet --yes >/dev/null \
-    && sudo -u dev --login /home/dev/conda/bin/conda create --yes -n research python=3.9 numpy \
-    && sudo -u dev --login /home/dev/conda/bin/conda clean --yes --index-cache >/dev/null \
-    && echo ". /home/dev/conda/etc/profile.d/conda.sh" >> ~/.bashrc \
-    && echo "conda activate research" >> ~/.bashrc \
+    && conda update conda --quiet --yes > /dev/null \
+    && conda create --yes -n research python=3.9 numpy \
+    && conda clean --yes --index-cache >/dev/null \
+    && echo ". /home/dev/conda/etc/profile.d/conda.sh" >> /home/dev/.bashrc \
+    && echo "conda activate research" >> /home/dev/.bashrc \
     && ln -s /home/dev/conda/envs/research/bin/python /usr/bin/python
 SHELL ["/bin/bash", "-l", "-c"]
 
-USER dev
-WORKDIR /home/dev
-ENV HOME /home/dev
 ENV PATH $HOME/.local/bin:$PATH
 # Install OpenCV
 RUN CC=gcc && CXX=g++ && mkdir ~/opencv && cd ~/opencv \
@@ -216,7 +217,7 @@ RUN CC=gcc && CXX=g++ && mkdir ~/opencv && cd ~/opencv \
 # Default channel is required to install latest version of torchvision.
 RUN conda config --append channels defaults \
     && mamba install --yes -n research -c pytorch -c nvidia \
-       pytorch torchvision cudatoolkit=11.3 \
+       pytorch torchvision cudatoolkit=${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} \
        scipy \
        sympy \
        pandas \
@@ -233,9 +234,7 @@ RUN conda config --append channels defaults \
     && conda activate research \
 # Pip Install
     && pip install japanize-matplotlib torchinfo --no-cache-dir \
-    && mamba clean -y --all &>/dev/null && chown -hR dev:dev /home/dev/conda/ \
-    && echo ". /home/dev/conda/etc/profile.d/conda.sh" >> ~/.bashrc \
-    && echo "conda activate research" >> ~/.bashrc
+    && mamba clean -y --all &> /dev/null
 ENV PATH $PATH:/home/dev/conda/envs/research/bin
 
 # Make symbolic link to a lib. Required for OpenCV and ffmpeg?
@@ -269,16 +268,15 @@ RUN jupyter lab --generate-config \
     ${jupyter_lab_config} \
     # ${jupyter_notebook_config} \
     && mkdir -p ~/.jupyter/lab/user-settings/@jupyterlab 
-COPY --chown=dev:dev ["./check_gpu.py", "./mnist.py", "/home/dev/notebooks/templates/"]
-COPY --chown=dev:dev ./jupyter_config/ /home/dev/.jupyter/lab/user-settings/@jupyterlab/
+COPY ["./check_gpu.py", "./mnist.py", "/home/dev/notebooks/templates/"]
+COPY ./jupyter_config/ /home/dev/.jupyter/lab/user-settings/@jupyterlab/
 
 # Laucher
 ENV LAUNCH_SCRIPT_DIR /home/dev/.local/bin
 ENV LAUNCH_SCRIPT_PATH ${LAUNCH_SCRIPT_DIR}/run_jupyter.sh
-COPY --chown=dev:dev ./run_jupyter.sh /home/dev/.local/bin/
+COPY ./run_jupyter.sh /home/dev/.local/bin/
 
 RUN chmod +x ${LAUNCH_SCRIPT_PATH}
-USER root
 # For Jupyter
 EXPOSE 8888
 # For SSH
