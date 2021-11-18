@@ -12,7 +12,7 @@ WORKDIR /home/dev
 ENV PATH /home/dev/conda/bin:$PATH
 ENV HOME /home/dev
 
-RUN sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/apt/sources.list && \
+RUN umask 000 && sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/apt/sources.list && \
     apt-get update --fix-missing -qq && apt-get install -y \
     autoconf \
     autoconf-archive \
@@ -103,7 +103,8 @@ RUN sed -i -e "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" \
     chmod 0440 /etc/sudoers.d/dev
 
 # Install miniforge
-RUN curl -L -sS -o /home/dev/miniforge.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh" \
+RUN umask 000 \
+    && curl -L -sS -o /home/dev/miniforge.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh" \
     && /bin/bash /home/dev/miniforge.sh -b -p /home/dev/conda \
     && rm /home/dev/miniforge.sh \
     && ln -s /home/dev/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
@@ -117,7 +118,7 @@ SHELL ["/bin/bash", "-l", "-c"]
 
 ENV PATH $HOME/.local/bin:$PATH
 # Install OpenCV
-RUN CC=gcc && CXX=g++ && mkdir ~/opencv && cd ~/opencv \
+RUN CC=gcc && CXX=g++ && umask 000 && mkdir ~/opencv && cd ~/opencv \
     && curl -L -O "https://github.com/opencv/opencv/archive/${OPEN_CV_VERSION}.zip" \
     && curl -L -o opencv_contrib-${OPEN_CV_VERSION}.zip "https://github.com/opencv/opencv_contrib/archive/${OPEN_CV_VERSION}.zip" \
     && unzip -q ${OPEN_CV_VERSION}.zip \
@@ -215,7 +216,7 @@ RUN CC=gcc && CXX=g++ && mkdir ~/opencv && cd ~/opencv \
 
 # Install Python library
 # Default channel is required to install latest version of torchvision.
-RUN conda config --append channels defaults \
+RUN umask 000 && conda config --append channels defaults \
     && mamba install --yes -n research -c pytorch -c nvidia \
        pytorch torchvision cudatoolkit=${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} \
        scipy \
@@ -244,7 +245,8 @@ RUN ln -s /home/dev/conda/envs/research/lib/libopenh264.so /home/dev/conda/envs/
 ENV NOTEBOOK_DIR /home/dev/notebooks
 ENV DEFAULT_TEMPLATE_DIR ${NOTEBOOK_DIR}/templates
 ENV HOST_TEMPLATE_DIR ${NOTEBOOK_DIR}/host/templates
-RUN jupyter lab --generate-config \
+RUN umask 000 \
+    && jupyter lab --generate-config \
     # && jupyter notebook --generate-config \
     && jupyter_lab_config=$(jupyter --config-dir)/jupyter_lab_config.py \
     && jupyter_notebook_config=$(jupyter --config-dir)/jupyter_notebook_config.py \
@@ -276,7 +278,9 @@ ENV LAUNCH_SCRIPT_DIR /home/dev/.local/bin
 ENV LAUNCH_SCRIPT_PATH ${LAUNCH_SCRIPT_DIR}/run_jupyter.sh
 COPY ./run_jupyter.sh /home/dev/.local/bin/
 
-RUN chmod +x ${LAUNCH_SCRIPT_PATH}
+RUN chmod +x ${LAUNCH_SCRIPT_PATH} \
+    && chmod +rw -R /home/dev/notebooks \
+    && chmod +rw -R /home/dev/.jupyter
 # For Jupyter
 EXPOSE 8888
 # For SSH
