@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
+import argparse
 import os
 import sys
 import time
-import argparse
 
 # Graph
 import matplotlib.pyplot as plt
 # Torch
+import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim
 import torch.utils.data
+import torchinfo
 import torchvision
-import torchvision.transforms as transforms
+from matplotlib.ticker import MultipleLocator
+from torch import nn
+from torchvision import transforms
 # Utility
 from tqdm import trange, tqdm
 
-N = 40  # Train iteration count
+N = 30  # Train iteration count
+TEST_EPOCH = 5  # Evaluate test data for each TEST_EPOCH epochs.
 
 
 def main(device: torch.device, mini_batch: int, is_gpu: bool) -> None:
@@ -44,19 +48,33 @@ def main(device: torch.device, mini_batch: int, is_gpu: bool) -> None:
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(1, 32, (3, 3))  # 28x28x1 -> 26x26x32
-        self.conv2 = nn.Conv2d(32, 64, (3, 3))  # 26x26x32 -> 24x24x64
-        self.pool1 = nn.MaxPool2d(2, 2)  # 24x24x64 -> 12x12x64
+        activation = nn.ELU  # Change here to `nn.ReLU` to use ReLU.
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(1, 32, (3, 3)),  # 28x28x1 -> 26x26x32
+            activation(),
+        )
+        self.conv2 = nn.Sequential(
+            nn.Conv2d(32, 64, (3, 3)),  # 26x26x32 -> 24x24x64
+            activation(),
+            nn.MaxPool2d(2, 2),  # 24x24x64 -> 12x12x64
+        )
         self.dropout1 = nn.Dropout2d()
-        self.fc1 = nn.Linear(12 * 12 * 64, 256)
+        self.fc1 = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(12 * 12 * 64, 256),
+            activation()
+        )
         self.dropout2 = nn.Dropout(p=0.3)
-        self.fc2 = nn.Linear(256, 10)
+        self.fc2 = nn.Sequential(
+            nn.Linear(256, 10),
+            activation(),
+        )
 
     def feature(self, x):
-        x = F.relu(self.conv1(x))
-        x = self.pool1(F.relu(self.conv2(x)))
+        x = self.conv1(x)
+        x = self.conv2(x)
         x = self.dropout1(x)
-        x = F.relu(self.fc1(x.view(-1, 12 * 12 * 64)))
+        x = self.fc1(x)
         x = self.dropout2(x)
         return x
 
@@ -66,8 +84,11 @@ class Net(nn.Module):
         return x
 
 
-def evaluate(device, net, is_gpu, loss_func, data_loader, get_loss=False):
+@torch.no_grad()
+def evaluate(device: torch.device, net: Net, is_gpu: bool,
+             loss_func, data_loader, get_loss=False):
     total, correct, loss = 0, 0, 0
+    net.eval()
     p = tqdm(data_loader) if not get_loss else data_loader
     for inputs, labels in p:
         inputs = inputs.to(device, non_blocking=is_gpu)
@@ -95,6 +116,7 @@ def train_and_evaluate(device: torch.device, is_gpu: bool,
                        test_loader: torch.utils.data.DataLoader):
     net = Net().to(device, )
     _print(net, "Network")
+    torchinfo.summary(net, input_size=(10, 1, 28, 28))
     loss_func = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(net.parameters())
 
@@ -104,6 +126,7 @@ def train_and_evaluate(device: torch.device, is_gpu: bool,
     for epoch in trange(N):
         rl = 0.0
         _total, _correct = 0, 0
+        net.train()
         for i, (inputs, labels) in enumerate(train_loader):
             inputs = inputs.to(device, non_blocking=True)
             labels = labels.to(device, non_blocking=True)
@@ -121,45 +144,46 @@ def train_and_evaluate(device: torch.device, is_gpu: bool,
             rl += loss.item()
         loss_log.append(rl)
         accuracy_log.append(_correct / _total)
-        if epoch % 20 == 19 or epoch < 5:
-            with torch.no_grad():
-                test_total, test_correct, test_loss = evaluate(
-                    device, net, is_gpu, loss_func, test_loader, True)
-                test_accuracy_log.append(test_correct / test_total)
-                test_loss_log.append(test_loss)
-                test_epochs.append(epoch)
-            tqdm.write(f"[epoch={epoch + 1}] loss={rl:.3f} test={test_loss:.3f} "
-                       f"correct={_correct} total={_total}")
+        if (epoch + 1) % TEST_EPOCH == 0 or epoch < 5:
+            test_total, test_correct, test_loss = evaluate(
+                device, net, is_gpu, loss_func, test_loader, True)
+            test_accuracy_log.append(test_correct / test_total)
+            test_loss_log.append(test_loss)
+            test_epochs.append(epoch)
+            tqdm.write(f"[epoch={epoch + 1:02}] train loss={rl:.3f} test={test_loss:.3f} "
+                       f"test correct={_correct} total={_total}")
     took = time.time() - started
-    _print(f"Learning {N} steps took {took}, average={took / N}.", "Result")
+    _print(title="Result", content=f"Learning {N} steps took {took}, average={took / N}.")
 
     make_graph(N, accuracy_log, device, loss_log,
                test_accuracy_log, test_epochs, test_loss_log)
     started = time.time()
-    with torch.no_grad():
-        train_total, train_correct = evaluate(
-            device, net, is_gpu, loss_func, train_loader)
-        test_total, test_correct = evaluate(
-            device, net, is_gpu, loss_func, test_loader)
-        _print(
-            f"Evaluation took {time.time() - started}.\n"
-            f"Train Accuracy {train_correct / train_total:.3f} ({train_correct=}, {train_total=})\n"
-            f"Test Accuracy {test_correct / test_total:.3f} ({test_correct=}, {test_total=})",
-            "Evaluation"
-        )
+    train_total, train_correct = evaluate(
+        device, net, is_gpu, loss_func, train_loader)
+    test_total, test_correct = evaluate(
+        device, net, is_gpu, loss_func, test_loader)
+    _print(title="Evaluation",
+           content=f"Evaluation took {time.time() - started}.\n"
+                   f"Train Accuracy {train_correct / train_total:.3f} ({train_correct=}, {train_total=})\n"
+                   f"Test Accuracy {test_correct / test_total:.3f} ({test_correct=}, {test_total=})",
+           )
+    return
 
 
 def make_graph(epochs, accuracy_log, device, loss_log, test_accuracy_log, test_epochs, test_loss_log):
-    fig: plt.Figure = plt.figure(figsize=(8, 6))
+    fig: plt.Figure = plt.figure(figsize=(12, 9))
     ax1: plt.Axes = fig.add_subplot(1, 1, 1)
     ax2: plt.Axes = ax1.twinx()
-    ax1.plot(range(epochs), loss_log, label="TRAIN Loss")
-    ax1.plot(test_epochs, test_loss_log, label="TEST Loss", ls="dashed")
+    ax1.plot(np.arange(epochs) + 1, loss_log, label="TRAIN Loss")
+    ax1.plot(np.array(test_epochs) + 1, test_loss_log, label="TEST Loss", ls="dashed")
     ax1.set_ylabel("Loss")
     ax1.set_xlabel("Epoch")
-    ax2.plot(range(epochs), accuracy_log,
+    ax1.get_xaxis().set_major_locator(MultipleLocator(5))
+    ax1.get_xaxis().set_minor_locator(MultipleLocator(1))
+    ax1.set_xlim(0, epochs)
+    ax2.plot(np.arange(epochs) + 1, accuracy_log,
              label="TRAIN Accuracy", color="green")
-    ax2.plot(test_epochs, test_accuracy_log, label="TEST Accuracy",
+    ax2.plot(np.array(test_epochs) + 1, test_accuracy_log, label="TEST Accuracy",
              color="purple", ls="dashed")
     ax2.set_ylim(min(min(accuracy_log), min(test_accuracy_log)) * 0.95, 1)
     ax2.set_ylabel("Accuracy")
@@ -179,11 +203,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     is_cuda_available = torch.cuda.is_available()
-    is_gpu = args.device == "gpu"
-    if is_gpu and is_cuda_available:
+    _is_gpu = args.device == "gpu"
+    if _is_gpu and is_cuda_available:
         print("GPU is supported and selected.")
-        _d = torch.device("cuda:0")
-    elif is_gpu and not is_cuda_available:
+        _d = torch.device("cuda")
+    elif _is_gpu and not is_cuda_available:
         print("GPU is NOT supported. Using CPU.")
         _d = torch.device("cpu")
     else:
@@ -197,4 +221,4 @@ if __name__ == '__main__':
         _print(torch.__config__.parallel_info(), "Parallel Info")
 
     print(f"Device={_d}, Batch Size={args.batch}")
-    main(_d, args.batch, is_gpu)
+    main(_d, args.batch, _is_gpu)
