@@ -116,7 +116,7 @@ def train_and_evaluate(device: torch.device, is_gpu: bool,
                        test_loader: torch.utils.data.DataLoader):
     net = Net().to(device, )
     _print(net, "Network")
-    torchinfo.summary(net, input_size=(10, 1, 28, 28))
+    torchinfo.summary(net, input_size=(10, 1, 28, 28), device=device)
     loss_func = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(net.parameters())
 

@@ -28,6 +28,7 @@ RUN umask 000 && sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.
     gcc \
     git \
     gphoto2 \
+    gosu \
     less \
     libavcodec-dev \
     libavformat-dev \
@@ -257,7 +258,7 @@ RUN umask 000 \
     && mkdir -p ${DEFAULT_TEMPLATE_DIR} \
     && echo "c.ContentsManager.allow_hidden = True" >> ${jupyter_lab_config} \
     && echo "c.FileContentsManager.allow_hidden = True" >> ${jupyter_lab_config} \
-    && echo "c.ServerApp.tornado_settings = {'shell_command': ['bash']}" >> ${jupyter_lab_config} \
+    && echo "c.ServerApp.terminado_settings = {'shell_command': ['/usr/bin/bash']}" >> ${jupyter_lab_config} \
     && sed -i \
     -e "s/# c.ServerApp.ip = 'localhost'/c.ServerApp.ip = '0.0.0.0'/" \
     -e "s/# c.NotebookApp.ip = 'localhost'/c.NotebookApp.ip = '0.0.0.0'/" \
@@ -291,3 +292,5 @@ EXPOSE 8888
 # For SSH
 EXPOSE 22
 CMD ["run_jupyter.sh"]
+ENTRYPOINT ["/home/dev/.local/bin/entry.sh"]
+
