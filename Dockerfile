@@ -224,7 +224,7 @@ RUN CC=gcc && CXX=g++ && umask 000 && mkdir ~/opencv && cd ~/opencv \
 # Default channel is required to install latest version of torchvision.
 RUN umask 000 && conda config --append channels defaults \
     && mamba install --yes -n research -c pytorch -c nvidia \
-       pytorch torchvision cudatoolkit=${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} \
+       pytorch torchvision av cudatoolkit=${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} \
        scipy \
        sympy \
        pandas \
