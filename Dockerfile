@@ -4,7 +4,6 @@ FROM nvidia/cuda:11.3.1-cudnn8-devel-ubuntu20.04
 ARG CUDA_MAJOR_VERSION=${CUDA_MAJOR_VERSION:-11}
 ARG CUDA_MINOR_VERSION=${CUDA_MINOR_VERSION:-3}
 
-ENV DEBIAN_FRONTEND=noninteractive
 ARG OPEN_CV_VERSION=${OPEN_CV_VERSION:-4.5.3}
 
 RUN umask 000 && mkdir /home/dev 
@@ -12,8 +11,10 @@ WORKDIR /home/dev
 ENV PATH /home/dev/conda/bin:$PATH
 ENV HOME /home/dev
 
-RUN umask 000 && sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/apt/sources.list && \
-    apt-get update --fix-missing -qq && apt-get install -y \
+RUN umask 000 && DEBIAN_FRONTEND=noninteractive \
+    && sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/apt/sources.list \
+    && apt-get update --fix-missing -qq \
+    && apt-get install -y \
     autoconf \
     autoconf-archive \
     automake \
@@ -100,25 +101,25 @@ RUN sed -i -e "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" \
            /etc/ssh/sshd_config && \
     sed -i -e "s/root:x:/root::/g" /etc/passwd && \
     mkdir /run/sshd && \
-    echo dev ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/dev && \
+    echo "dev ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/dev && \
     chmod 0440 /etc/sudoers.d/dev
 
 # Copy initial scripts
-RUN mv /root/.bashrc /root/.profile /home/dev/ \
-    && chmod 777 /home/dev/.bashrc /home/dev/.profile
+RUN cp /root/.bashrc /root/.profile ${HOME}/ \
+    && chmod 777 ${HOME}/.bashrc ${HOME}/.profile
 
 # Install miniforge
 RUN umask 000 \
     && curl -L -sS -o /home/dev/miniforge.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh" \
-    && /bin/bash /home/dev/miniforge.sh -b -p /home/dev/conda \
+    && /bin/bash /home/dev/miniforge.sh -b -p ${HOME}/conda \
     && rm /home/dev/miniforge.sh \
-    && ln -s /home/dev/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
+    && ln -s ${HOME}/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
     && conda update conda --quiet --yes > /dev/null \
     && conda create --yes -n research python=3.9 numpy \
     && conda clean --yes --index-cache >/dev/null \
-    && echo ". /home/dev/conda/etc/profile.d/conda.sh" >> /home/dev/.bashrc \
-    && echo "conda activate research" >> /home/dev/.bashrc \
-    && ln -s /home/dev/conda/envs/research/bin/python /usr/bin/python
+    && echo ". ${HOME}/conda/etc/profile.d/conda.sh" >> ${HOME}/.bashrc \
+    && echo "conda activate research" >> ${HOME}/.bashrc \
+    && ln -s ${HOME}/conda/envs/research/bin/python /usr/bin/python
 SHELL ["/bin/bash", "-l", "-c"]
 
 ENV PATH $HOME/.local/bin:$PATH
@@ -129,11 +130,11 @@ RUN CC=gcc && CXX=g++ && umask 000 && mkdir ~/opencv && cd ~/opencv \
     && unzip -q ${OPEN_CV_VERSION}.zip \
     && unzip -q opencv_contrib-${OPEN_CV_VERSION}.zip \
     && cd opencv-${OPEN_CV_VERSION} \
-    && mkdir build \
-    && conda activate research && cd ~/opencv/opencv-${OPEN_CV_VERSION}/build \
+    && mkdir build && cd build \
+    && conda activate research \
     && cmake -D CMAKE_BUILD_TYPE=Release \
-             -D CMAKE_INSTALL_PREFIX=/home/dev/conda/envs/research \
-             -D OPENCV_EXTRA_MODULES_PATH=/home/dev/opencv/opencv_contrib-${OPEN_CV_VERSION}/modules \
+             -D CMAKE_INSTALL_PREFIX=${HOME}/conda/envs/research \
+             -D OPENCV_EXTRA_MODULES_PATH=${HOME}/opencv/opencv_contrib-${OPEN_CV_VERSION}/modules \
              -D OPENCV_GENERATE_PKGCONFIG=ON \
              -D BUILD_opencv_apps=ON \
              -D BUILD_opencv_calib3d=ON \
@@ -208,9 +209,9 @@ RUN CC=gcc && CXX=g++ && umask 000 && mkdir ~/opencv && cd ~/opencv \
              -D BUILD_opencv_cudawarping=ON \
              -D BUILD_opencv_cudev=ON \
              -D PYTHON_DEFAULT_EXECUTABLE=python3 \
-             -D PYTHON3_INCLUDE_DIR=`python -c 'from distutils.sysconfig import get_python_inc; print(get_python_inc())'` \
-             -D PYTHON3_NUMPY_INCLUDE_DIRS=`python -c 'import numpy; print(numpy.get_include())'` \
-             -D PYTHON3_LIBRARIES=`find /home/dev/conda/envs/research/lib -name 'libpython*.so'` \
+             -D PYTHON3_INCLUDE_DIR=$(python -c 'from distutils.sysconfig import get_python_inc; print(get_python_inc())') \
+             -D PYTHON3_NUMPY_INCLUDE_DIRS=$(python -c 'import numpy; print(numpy.get_include())') \
+             -D PYTHON3_LIBRARIES=$(find ${HOME}/conda/envs/research/lib -name 'libpython*.so') \
              -D BUILD_TESTS=OFF \
              -D BUILD_PERF_TESTS=OFF \
              -D BUILD_EXAMPLES=OFF \
@@ -241,13 +242,13 @@ RUN umask 000 && conda config --append channels defaults \
 # Pip Install
     && pip install japanize-matplotlib torchinfo --no-cache-dir \
     && mamba clean -y --all &> /dev/null
-ENV PATH $PATH:/home/dev/conda/envs/research/bin
+ENV PATH $PATH:${HOME}/conda/envs/research/bin
 
 # Make symbolic link to a lib. Required for OpenCV and ffmpeg?
-RUN ln -s /home/dev/conda/envs/research/lib/libopenh264.so /home/dev/conda/envs/research/lib/libopenh264.so.5
+RUN ln -s ${HOME}/conda/envs/research/lib/libopenh264.so ${HOME}/conda/envs/research/lib/libopenh264.so.5
 
 # Install Jupyter lab extensions
-ENV NOTEBOOK_DIR /home/dev/notebooks
+ENV NOTEBOOK_DIR ${HOME}/notebooks
 ENV DEFAULT_TEMPLATE_DIR ${NOTEBOOK_DIR}/templates
 RUN umask 000 \
     && jupyter lab --generate-config \
@@ -273,19 +274,19 @@ RUN umask 000 \
     -e "s/# c.LabServerApp.open_browser = True/c.LabServerApp.open_browser = False/" \
     ${jupyter_lab_config} \
     # ${jupyter_notebook_config} \
-    && mkdir -p ~/.jupyter/lab/user-settings/@jupyterlab 
+    && mkdir -p $(jupyter --config-dir)/lab/user-settings/@jupyterlab 
 COPY ["./check_gpu.py", "./mnist.py", "${DEFAULT_TEMPLATE_DIR}/"]
-COPY ./jupyter_config/ /home/dev/.jupyter/lab/user-settings/@jupyterlab/
+COPY ./jupyter_config/ $(jupyter --config-dir)/lab/user-settings/@jupyterlab/
 
 # Laucher
-ENV LAUNCH_SCRIPT_DIR /home/dev/.local/bin
+ENV LAUNCH_SCRIPT_DIR ${HOME}/.local/bin
 ENV LAUNCH_SCRIPT_PATH ${LAUNCH_SCRIPT_DIR}/run_jupyter.sh
 COPY ["./run_jupyter.sh", "./entry.sh", "${LAUNCH_SCRIPT_DIR}/"]
 
 RUN chmod +x ${LAUNCH_SCRIPT_PATH} \
     && chmod 777 -R ${NOTEBOOK_DIR} \
-    && chmod 777 -R /home/dev/.jupyter \
-    && chmod 777 -R /home/dev/.local \
+    && chmod 777 -R ${HOME}/.jupyter \
+    && chmod 777 -R ${HOME}/.local \
     && ln -s ${NOTEBOOK_DIR} /work
 # For Jupyter
 EXPOSE 8888
