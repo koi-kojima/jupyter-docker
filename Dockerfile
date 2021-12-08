@@ -8,13 +8,13 @@ ARG OPEN_CV_VERSION=${OPEN_CV_VERSION:-4.5.3}
 
 RUN umask 000 && mkdir /home/dev 
 WORKDIR /home/dev
-ENV PATH /home/dev/conda/bin:$PATH
 ENV HOME /home/dev
+ENV PATH ${HOME}/conda/bin:$PATH
 
-RUN umask 000 && DEBIAN_FRONTEND=noninteractive \
+RUN umask 000 \
     && sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/apt/sources.list \
     && apt-get update --fix-missing -qq \
-    && apt-get install -y \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     autoconf \
     autoconf-archive \
     automake \
@@ -124,7 +124,7 @@ SHELL ["/bin/bash", "-l", "-c"]
 
 ENV PATH $HOME/.local/bin:$PATH
 # Install OpenCV
-RUN CC=gcc && CXX=g++ && umask 000 && mkdir ~/opencv && cd ~/opencv \
+RUN umask 000 && mkdir ~/opencv && cd ~/opencv \
     && curl -L -O "https://github.com/opencv/opencv/archive/${OPEN_CV_VERSION}.zip" \
     && curl -L -o opencv_contrib-${OPEN_CV_VERSION}.zip "https://github.com/opencv/opencv_contrib/archive/${OPEN_CV_VERSION}.zip" \
     && unzip -q ${OPEN_CV_VERSION}.zip \
@@ -132,7 +132,8 @@ RUN CC=gcc && CXX=g++ && umask 000 && mkdir ~/opencv && cd ~/opencv \
     && cd opencv-${OPEN_CV_VERSION} \
     && mkdir build && cd build \
     && conda activate research \
-    && cmake -D CMAKE_BUILD_TYPE=Release \
+    && CC=gcc CXX=g++ cmake \
+             -D CMAKE_BUILD_TYPE=Release \
              -D CMAKE_INSTALL_PREFIX=${HOME}/conda/envs/research \
              -D OPENCV_EXTRA_MODULES_PATH=${HOME}/opencv/opencv_contrib-${OPEN_CV_VERSION}/modules \
              -D OPENCV_GENERATE_PKGCONFIG=ON \
@@ -235,7 +236,7 @@ RUN umask 000 && conda config --append channels defaults \
        scikit-learn \
        scikit-image \
        tqdm \
-       jedi jupyterlab jupyterlab-git ipywidgets \
+       jedi jupyterlab nodejs jupyterlab-git ipywidgets \
        pylint autopep8 \
     && conda config --remove channels defaults \
     && conda activate research \
@@ -276,7 +277,7 @@ RUN umask 000 \
     # ${jupyter_notebook_config} \
     && mkdir -p $(jupyter --config-dir)/lab/user-settings/@jupyterlab 
 COPY ["./check_gpu.py", "./mnist.py", "${DEFAULT_TEMPLATE_DIR}/"]
-COPY ./jupyter_config/ $(jupyter --config-dir)/lab/user-settings/@jupyterlab/
+COPY ./jupyter_config/ ${HOME}/.jupyter/lab/user-settings/@jupyterlab/
 
 # Laucher
 ENV LAUNCH_SCRIPT_DIR ${HOME}/.local/bin
