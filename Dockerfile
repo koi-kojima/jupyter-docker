@@ -249,7 +249,6 @@ RUN ln -s /home/dev/conda/envs/research/lib/libopenh264.so /home/dev/conda/envs/
 # Install Jupyter lab extensions
 ENV NOTEBOOK_DIR /home/dev/notebooks
 ENV DEFAULT_TEMPLATE_DIR ${NOTEBOOK_DIR}/templates
-ENV HOST_TEMPLATE_DIR ${NOTEBOOK_DIR}/host/templates
 RUN umask 000 \
     && jupyter lab --generate-config \
     # && jupyter notebook --generate-config \
@@ -275,18 +274,19 @@ RUN umask 000 \
     ${jupyter_lab_config} \
     # ${jupyter_notebook_config} \
     && mkdir -p ~/.jupyter/lab/user-settings/@jupyterlab 
-COPY ["./check_gpu.py", "./mnist.py", "/home/dev/notebooks/templates/"]
+COPY ["./check_gpu.py", "./mnist.py", "${DEFAULT_TEMPLATE_DIR}/"]
 COPY ./jupyter_config/ /home/dev/.jupyter/lab/user-settings/@jupyterlab/
 
 # Laucher
 ENV LAUNCH_SCRIPT_DIR /home/dev/.local/bin
 ENV LAUNCH_SCRIPT_PATH ${LAUNCH_SCRIPT_DIR}/run_jupyter.sh
-COPY ./run_jupyter.sh ./entry.sh /home/dev/.local/bin/
+COPY ["./run_jupyter.sh", "./entry.sh", "${LAUNCH_SCRIPT_DIR}/"]
 
 RUN chmod +x ${LAUNCH_SCRIPT_PATH} \
-    && chmod 777 -R /home/dev/notebooks \
+    && chmod 777 -R ${NOTEBOOK_DIR} \
     && chmod 777 -R /home/dev/.jupyter \
-    && chmod 777 -R /home/dev/.local
+    && chmod 777 -R /home/dev/.local \
+    && ln -s ${NOTEBOOK_DIR} /work
 # For Jupyter
 EXPOSE 8888
 # For SSH
