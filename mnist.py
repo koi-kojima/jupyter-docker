@@ -24,31 +24,40 @@ N = 30  # Train iteration count
 TEST_EPOCH = 5  # Evaluate test data for each TEST_EPOCH epochs.
 
 
-def main(device: torch.device, mini_batch: int, is_gpu: bool) -> None:
+def main(device: torch.device, mini_batch: int, is_gpu: bool, dataset_name: str) -> None:
     workers = 4 if is_gpu else 0
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.5,), (0.5,))
     ])
-    train = torchvision.datasets.QMNIST(
+    if not dataset_name or dataset_name == "QMNIST":
+        dataset_class = torchvision.datasets.QMNIST
+    elif dataset_name == "FashionMNIST":
+        dataset_class = torchvision.datasets.FashionMNIST
+    elif dataset_name == "KMNIST":
+        dataset_class = torchvision.datasets.KMNIST
+    else:
+        raise ValueError(f"Unknown dataset {dataset_name=}")
+
+    train = dataset_class(
         root="./data", train=True, download=True, transform=transform
     )
     train_loader = torch.utils.data.DataLoader(
         train, batch_size=mini_batch, shuffle=True, num_workers=workers, pin_memory=False
     )
-    test = torchvision.datasets.QMNIST(
+    test = dataset_class(
         root="./data", train=False, download=True, transform=transform
     )
     test_loader = torch.utils.data.DataLoader(
         test, batch_size=mini_batch, shuffle=False, num_workers=workers, pin_memory=False
     )
-    train_and_evaluate(device, is_gpu, train_loader, test_loader)
+    train_and_evaluate(device, is_gpu, train_loader, test_loader, dataset_name)
 
 
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        activation = nn.ELU  # Change here to `nn.ReLU` to use ReLU.
+        activation = nn.GELU  # Change here to `nn.ReLU` to use ReLU.
         self.conv1 = nn.Sequential(
             nn.Conv2d(1, 32, (3, 3)),  # 28x28x1 -> 26x26x32
             activation(),
@@ -113,7 +122,8 @@ def _print(content, title: str):
 
 def train_and_evaluate(device: torch.device, is_gpu: bool,
                        train_loader: torch.utils.data.DataLoader,
-                       test_loader: torch.utils.data.DataLoader):
+                       test_loader: torch.utils.data.DataLoader,
+                       dataset_name: str):
     net = Net().to(device, )
     _print(net, "Network")
     torchinfo.summary(net, input_size=(10, 1, 28, 28), device=device)
@@ -156,7 +166,7 @@ def train_and_evaluate(device: torch.device, is_gpu: bool,
     _print(title="Result", content=f"Learning {N} steps took {took}, average={took / N}.")
 
     make_graph(N, accuracy_log, device, loss_log,
-               test_accuracy_log, test_epochs, test_loss_log)
+               test_accuracy_log, test_epochs, test_loss_log, dataset_name)
     started = time.time()
     train_total, train_correct = evaluate(
         device, net, is_gpu, loss_func, train_loader)
@@ -170,7 +180,8 @@ def train_and_evaluate(device: torch.device, is_gpu: bool,
     return
 
 
-def make_graph(epochs, accuracy_log, device, loss_log, test_accuracy_log, test_epochs, test_loss_log):
+def make_graph(epochs, accuracy_log, device, loss_log, test_accuracy_log, test_epochs, test_loss_log, dataset_name: str):
+    dataset_name = dataset_name or 'QMNIST'
     fig: plt.Figure = plt.figure(figsize=(12, 9))
     ax1: plt.Axes = fig.add_subplot(1, 1, 1)
     ax2: plt.Axes = ax1.twinx()
@@ -191,15 +202,16 @@ def make_graph(epochs, accuracy_log, device, loss_log, test_accuracy_log, test_e
     h2, l2 = ax2.get_legend_handles_labels()
     ax1.legend(h1 + h2, l1 + l2, loc='right')
     ax1.grid()
-    ax1.set_title(f"Learning Loss and Accuracy of QMNIST on {device}")
-    fig.savefig("QMNIST_train.pdf", dpi=300, bbox_inches='tight', pad_inches=0)
+    ax1.set_title(f"Learning Loss and Accuracy of {dataset_name} on {device}")
+    fig.savefig(f"{dataset_name}_train.pdf", dpi=300, bbox_inches='tight', pad_inches=0)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Run MNIST.")
     parser.add_argument(
-        "device", choices=["gpu", "cpu"], help="device where program works", )
-    parser.add_argument("batch", type=int, help="batch size (default=512)", default=512)
+        "device", choices=["gpu", "cpu"], help="device where this program works", )
+    parser.add_argument("-b", "--batch", type=int, help="batch size (default=512)", default=512)
+    parser.add_argument("-d", "--dataset", type=str, help="dataset name (default=QMNIST)", default="QMNIST")
     args = parser.parse_args()
 
     is_cuda_available = torch.cuda.is_available()
@@ -220,5 +232,5 @@ if __name__ == '__main__':
         torch.set_num_interop_threads(os.cpu_count())
         _print(torch.__config__.parallel_info(), "Parallel Info")
 
-    print(f"Device={_d}, Batch Size={args.batch}")
-    main(_d, args.batch, _is_gpu)
+    print(f"Device={_d}, Batch Size={args.batch}, Dataset={args.dataset}")
+    main(_d, args.batch, _is_gpu, args.dataset)
