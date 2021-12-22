@@ -1,0 +1,6 @@
+ARG BASE_VERSION
+FROM ghcr.io/koi-kojima/jupyter:${BASE_VERSION}
+
+RUN unlink /usr/lib/x86_64-linux-gnu/libcuda.so && \
+    unlink /usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1 && \
+    unlink /usr/lib/x86_64-linux-gnu/libcuda.so.1
