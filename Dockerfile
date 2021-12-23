@@ -241,7 +241,7 @@ RUN umask 000 && conda config --append channels defaults \
     && conda config --remove channels defaults \
     && conda activate research \
 # Pip Install
-    && pip install japanize-matplotlib torchinfo --no-cache-dir \
+    && pip install japanize-matplotlib torchinfo pytorchvideo --no-cache-dir \
     && mamba clean -y --all &> /dev/null
 ENV PATH $PATH:${HOME}/conda/envs/research/bin
 
