@@ -236,12 +236,13 @@ RUN umask 000 && conda config --append channels defaults \
        scikit-learn \
        scikit-image \
        tqdm \
+       umap-learn \
        jedi jupyterlab nodejs jupyterlab-git ipywidgets \
        pylint autopep8 \
     && conda config --remove channels defaults \
     && conda activate research \
 # Pip Install
-    && pip install japanize-matplotlib torchinfo pytorchvideo umap-learn --no-cache-dir \
+    && pip install japanize-matplotlib torchinfo pytorchvideo --no-cache-dir \
     && mamba clean -y --all &> /dev/null
 ENV PATH $PATH:${HOME}/conda/envs/research/bin
 
