@@ -116,7 +116,7 @@ RUN umask 000 \
     && ln -s ${HOME}/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
     && conda update conda --quiet --yes > /dev/null \
     && conda create --yes -n research python=3.9 numpy \
-    && conda clean --yes --index-cache >/dev/null \
+    && conda clean --yes --index-cache > /dev/null \
     && echo ". ${HOME}/conda/etc/profile.d/conda.sh" >> ${HOME}/.bashrc \
     && echo "conda activate research" >> ${HOME}/.bashrc \
     && ln -s ${HOME}/conda/envs/research/bin/python /usr/bin/python
@@ -261,18 +261,12 @@ RUN umask 000 \
     && echo "c.FileContentsManager.allow_hidden = True" >> ${jupyter_lab_config} \
     && echo "c.ServerApp.terminado_settings = {'shell_command': ['/usr/bin/bash']}" >> ${jupyter_lab_config} \
     && sed -i \
-    -e "s/# c.ServerApp.ip = 'localhost'/c.ServerApp.ip = '0.0.0.0'/" \
-    -e "s/# c.NotebookApp.ip = 'localhost'/c.NotebookApp.ip = '0.0.0.0'/" \
-    -e "s/# c.ServerApp.allow_root = False/c.ServerApp.allow_root = True/" \
-    -e "s/# c.NotebookApp.allow_root = False/c.NotebookApp.allow_root = True/" \
-    -e "s/# c.ServerApp.allow_remote_access = False/c.ServerApp.allow_remote_access = True/" \
-    -e "s/# c.NotebookApp.allow_remote_access = False/c.NotebookApp.allow_remote_access = True/" \
-    -e "s:# c.ServerApp.root_dir = '':c.ServerApp.root_dir = '$NOTEBOOK_DIR':" \
-    -e "s:# c.NotebookApp.root_dir = '':c.NotebookApp.root_dir = '$NOTEBOOK_DIR':" \
-    -e "s/# c.ContentsManager.allow_hidden = False/c.ContentsManager.allow_hidden = True/" \
-    -e "s/# c.FileContentsManager.allow_hidden = False/c.FileContentsManager.allow_hidden = True/" \
-    -e "s/# c.NotebookApp.open_browser = True/c.NotebookApp.open_browser = False/" \
-    -e "s/# c.LabServerApp.open_browser = True/c.LabServerApp.open_browser = False/" \
+    -e "s/# c.\(.*\).ip = 'localhost'/c.\1.ip = '0.0.0.0'/" \
+    -e "s/# c.\(.*\).allow_root = False/c.\1.allow_root = True/" \
+    -e "s/# c.\(.*\).allow_remote_access = False/c.\1.allow_remote_access = True/" \
+    -e "s:# c.\(.*\).root_dir = '':c.\1.root_dir = '$NOTEBOOK_DIR':" \
+    -e "s/# c.\(.*\).allow_hidden = False/c.\1.allow_hidden = True/" \
+    -e "s/# c.\(.*\).open_browser = True/c.\1.open_browser = False/" \
     ${jupyter_lab_config} \
     # ${jupyter_notebook_config} \
     && mkdir -p $(jupyter --config-dir)/lab/user-settings/@jupyterlab 
