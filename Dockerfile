@@ -105,7 +105,8 @@ RUN sed -i -e "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" \
     chmod 0440 /etc/sudoers.d/dev
 
 # Copy initial scripts
-RUN cp /root/.bashrc /root/.profile ${HOME}/ \
+RUN sed -i -e "s/#force_color_prompt=yes/force_color_prompt=yes/g" /root/.bashrc \
+    && cp /root/.bashrc /root/.profile ${HOME}/ \
     && chmod 777 ${HOME}/.bashrc ${HOME}/.profile
 
 # Install miniforge
