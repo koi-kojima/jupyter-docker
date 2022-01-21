@@ -4,7 +4,7 @@ FROM nvidia/cuda:11.3.1-cudnn8-devel-ubuntu20.04
 ARG CUDA_MAJOR_VERSION=${CUDA_MAJOR_VERSION:-11}
 ARG CUDA_MINOR_VERSION=${CUDA_MINOR_VERSION:-3}
 
-ARG OPEN_CV_VERSION=${OPEN_CV_VERSION:-4.5.3}
+ARG OPEN_CV_VERSION=${OPEN_CV_VERSION:-4.5.5}
 
 RUN umask 000 && mkdir /home/dev 
 WORKDIR /home/dev
@@ -126,10 +126,11 @@ SHELL ["/bin/bash", "-l", "-c"]
 ENV PATH $HOME/.local/bin:$PATH
 # Install OpenCV
 RUN umask 000 && mkdir ${HOME}/opencv && cd ${HOME}/opencv \
-    && curl -L -O "https://github.com/opencv/opencv/archive/${OPEN_CV_VERSION}.zip" \
+    && curl -L -o opencv-${OPEN_CV_VERSION}.zip "https://github.com/opencv/opencv/archive/${OPEN_CV_VERSION}.zip" \
     && curl -L -o opencv_contrib-${OPEN_CV_VERSION}.zip "https://github.com/opencv/opencv_contrib/archive/${OPEN_CV_VERSION}.zip" \
-    && unzip -q ${OPEN_CV_VERSION}.zip \
+    && unzip -q opencv-${OPEN_CV_VERSION}.zip \
     && unzip -q opencv_contrib-${OPEN_CV_VERSION}.zip \
+    && rm opencv-${OPEN_CV_VERSION}.zip opencv_contrib-${OPEN_CV_VERSION}.zip \
     && cd opencv-${OPEN_CV_VERSION} \
     && mkdir build && cd build \
     && conda activate research \
@@ -219,8 +220,7 @@ RUN umask 000 && mkdir ${HOME}/opencv && cd ${HOME}/opencv \
              -D BUILD_EXAMPLES=OFF \
              .. \
     && make -j $(($(nproc) + 1)) \
-    && make install \
-    && rm ${HOME}/opencv/${OPEN_CV_VERSION}.zip ${HOME}/opencv/opencv_contrib-${OPEN_CV_VERSION}.zip
+    && make install
 
 # Install Python library
 # Default channel is required to install latest version of torchvision.
