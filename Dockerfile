@@ -111,9 +111,9 @@ RUN sed -i -e "s/#force_color_prompt=yes/force_color_prompt=yes/g" /root/.bashrc
 
 # Install miniforge
 RUN umask 000 \
-    && curl -L -sS -o /home/dev/miniforge.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh" \
-    && /bin/bash /home/dev/miniforge.sh -b -p ${HOME}/conda \
-    && rm /home/dev/miniforge.sh \
+    && curl -L -sS -o ${HOME}/miniforge.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh" \
+    && /bin/bash ${HOME}/miniforge.sh -b -p ${HOME}/conda \
+    && rm ${HOME}/miniforge.sh \
     && ln -s ${HOME}/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
     && conda update conda --quiet --yes > /dev/null \
     && conda create --yes -n research python=3.9 numpy \
@@ -125,7 +125,7 @@ SHELL ["/bin/bash", "-l", "-c"]
 
 ENV PATH $HOME/.local/bin:$PATH
 # Install OpenCV
-RUN umask 000 && mkdir ~/opencv && cd ~/opencv \
+RUN umask 000 && mkdir ${HOME}/opencv && cd ${HOME}/opencv \
     && curl -L -O "https://github.com/opencv/opencv/archive/${OPEN_CV_VERSION}.zip" \
     && curl -L -o opencv_contrib-${OPEN_CV_VERSION}.zip "https://github.com/opencv/opencv_contrib/archive/${OPEN_CV_VERSION}.zip" \
     && unzip -q ${OPEN_CV_VERSION}.zip \
@@ -220,7 +220,7 @@ RUN umask 000 && mkdir ~/opencv && cd ~/opencv \
              .. \
     && make -j $(($(nproc) + 1)) \
     && make install \
-    && rm ~/opencv/${OPEN_CV_VERSION}.zip ~/opencv/opencv_contrib-${OPEN_CV_VERSION}.zip
+    && rm ${HOME}/opencv/${OPEN_CV_VERSION}.zip ${HOME}/opencv/opencv_contrib-${OPEN_CV_VERSION}.zip
 
 # Install Python library
 # Default channel is required to install latest version of torchvision.
