@@ -1,6 +1,7 @@
 ARG CUDA_MAJOR_VERSION=${CUDA_MAJOR_VERSION:-11}
 ARG CUDA_MINOR_VERSION=${CUDA_MINOR_VERSION:-3}
-FROM nvidia/cuda:11.3.1-cudnn8-devel-ubuntu20.04
+
+FROM nvidia/cuda:11.3.1-cudnn8-devel-ubuntu20.04 as base
 ARG CUDA_MAJOR_VERSION=${CUDA_MAJOR_VERSION:-11}
 ARG CUDA_MINOR_VERSION=${CUDA_MINOR_VERSION:-3}
 
@@ -116,27 +117,30 @@ RUN umask 000 \
     && rm ${HOME}/miniforge.sh \
     && ln -s ${HOME}/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
     && conda update conda --quiet --yes > /dev/null \
-    && conda create --yes -n research python=3.9 numpy \
+    && conda install --yes python=3.9 numpy \
     && conda clean --yes --index-cache > /dev/null \
     && echo ". ${HOME}/conda/etc/profile.d/conda.sh" >> ${HOME}/.bashrc \
-    && echo "conda activate research" >> ${HOME}/.bashrc \
-    && ln -s ${HOME}/conda/envs/research/bin/python /usr/bin/python
+    && echo "conda activate" >> ${HOME}/.bashrc \
+    && ln -s ${HOME}/conda/bin/python /usr/bin/python
 SHELL ["/bin/bash", "-l", "-c"]
 
 ENV PATH $HOME/.local/bin:$PATH
+
+FROM base as opencv
 # Install OpenCV
-RUN umask 000 && mkdir ${HOME}/opencv && cd ${HOME}/opencv \
+RUN umask 000 && mkdir ${HOME}/opencv ${HOME}/opencv/opencv-build && cd ${HOME}/opencv \
     && curl -L -o opencv-${OPEN_CV_VERSION}.zip "https://github.com/opencv/opencv/archive/${OPEN_CV_VERSION}.zip" \
     && curl -L -o opencv_contrib-${OPEN_CV_VERSION}.zip "https://github.com/opencv/opencv_contrib/archive/${OPEN_CV_VERSION}.zip" \
     && unzip -q opencv-${OPEN_CV_VERSION}.zip \
     && unzip -q opencv_contrib-${OPEN_CV_VERSION}.zip \
-    && rm opencv-${OPEN_CV_VERSION}.zip opencv_contrib-${OPEN_CV_VERSION}.zip \
-    && cd opencv-${OPEN_CV_VERSION} \
+    && rm opencv-${OPEN_CV_VERSION}.zip opencv_contrib-${OPEN_CV_VERSION}.zip
+RUN umask 000 \
+    && cd ${HOME}/opencv/opencv-${OPEN_CV_VERSION} \
     && mkdir build && cd build \
-    && conda activate research \
+    && conda activate \
     && CC=gcc CXX=g++ cmake \
              -D CMAKE_BUILD_TYPE=Release \
-             -D CMAKE_INSTALL_PREFIX=${HOME}/conda/envs/research \
+             -D CMAKE_INSTALL_PREFIX=${HOME}/opencv/opencv-build \
              -D OPENCV_EXTRA_MODULES_PATH=${HOME}/opencv/opencv_contrib-${OPEN_CV_VERSION}/modules \
              -D OPENCV_GENERATE_PKGCONFIG=ON \
              -D BUILD_opencv_apps=ON \
@@ -198,18 +202,27 @@ RUN umask 000 && mkdir ${HOME}/opencv && cd ${HOME}/opencv \
              -D PYTHON_DEFAULT_EXECUTABLE=python3 \
              -D PYTHON3_INCLUDE_DIR=$(python -c 'from distutils.sysconfig import get_python_inc; print(get_python_inc())') \
              -D PYTHON3_NUMPY_INCLUDE_DIRS=$(python -c 'import numpy; print(numpy.get_include())') \
-             -D PYTHON3_LIBRARIES=$(find ${HOME}/conda/envs/research/lib -name 'libpython*.so') \
+             -D PYTHON3_LIBRARIES=$(find ${HOME}/conda/lib -name 'libpython*.so') \
              -D BUILD_TESTS=OFF \
              -D BUILD_PERF_TESTS=OFF \
              -D BUILD_EXAMPLES=OFF \
+             -D INSTALL_PYTHON_EXAMPLES=ON \
              .. \
     && make -j $(($(nproc) + 1)) \
     && make install
+RUN cd ${HOME}/opencv/opencv-${OPEN_CV_VERSION}/build/python_loader \
+    && sed -i -e "/],/a include_package_data=True," -e "/],/a zip_safe=False," setup.py \
+    && sed -i -e "s:opencv-${OPEN_CV_VERSION}/build:opencv-build:" cv2/config.py \
+    && sed -i -e "s:opencv-${OPEN_CV_VERSION}/build/lib/python3:opencv-build/lib/python3.9/site-packages/cv2/python-3.9:" cv2/config-3.9.py \
+    && python setup.py bdist_wheel \
+    && mv dist/*.whl ${HOME}/opencv/opencv-build/
 
+FROM base
 # Install Python library
 # Default channel is required to install latest version of torchvision.
 RUN umask 000 && conda config --append channels defaults \
-    && mamba install --yes -n research -c pytorch -c nvidia \
+    && conda activate \
+    && mamba install --yes -c pytorch -c nvidia \
        pytorch torchvision av cudatoolkit=${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} \
        scipy \
        sympy \
@@ -225,14 +238,17 @@ RUN umask 000 && conda config --append channels defaults \
        jedi jupyterlab nodejs jupyterlab-git ipywidgets \
        pylint autopep8 \
     && conda config --remove channels defaults \
-    && conda activate research \
 # Pip Install
     && pip install japanize-matplotlib torchinfo pytorchvideo --no-cache-dir \
     && mamba clean -y --all &> /dev/null
-ENV PATH $PATH:${HOME}/conda/envs/research/bin
+ENV PATH $PATH:${HOME}/conda/bin
+
+COPY --from=opencv ["${HOME}/opencv/opencv-build", "${HOME}/opencv/opencv-build/"]
+RUN conda activate \
+    && pip install ${HOME}/opencv/opencv-build/*.whl --no-cache-dir
 
 # Make symbolic link to a lib. Required for OpenCV and ffmpeg?
-RUN ln -s ${HOME}/conda/envs/research/lib/libopenh264.so ${HOME}/conda/envs/research/lib/libopenh264.so.5
+RUN ln -s ${HOME}/conda/lib/libopenh264.so ${HOME}/conda/lib/libopenh264.so.5
 
 # Install Jupyter lab extensions
 ENV NOTEBOOK_DIR ${HOME}/notebooks
@@ -256,18 +272,15 @@ RUN umask 000 \
     ${jupyter_lab_config} \
     # ${jupyter_notebook_config} \
     && mkdir -p $(jupyter --config-dir)/lab/user-settings/@jupyterlab 
-COPY ["./check_gpu.py", "./mnist.py", "${DEFAULT_TEMPLATE_DIR}/"]
-COPY ./jupyter_config/ ${HOME}/.jupyter/lab/user-settings/@jupyterlab/
+COPY --chmod=777 ["./check_gpu.py", "./mnist.py", "${DEFAULT_TEMPLATE_DIR}/"]
+COPY --chmod=777 ./jupyter_config/ ${HOME}/.jupyter/lab/user-settings/@jupyterlab/
 
 # Laucher
 ENV LAUNCH_SCRIPT_DIR ${HOME}/.local/bin
 ENV LAUNCH_SCRIPT_PATH ${LAUNCH_SCRIPT_DIR}/run_jupyter.sh
-COPY ["./run_jupyter.sh", "./entry.sh", "${LAUNCH_SCRIPT_DIR}/"]
+COPY --chmod=777 ["./run_jupyter.sh", "./entry.sh", "${LAUNCH_SCRIPT_DIR}/"]
 
 RUN chmod +x ${LAUNCH_SCRIPT_PATH} \
-    && chmod 777 -R ${NOTEBOOK_DIR} \
-    && chmod 777 -R ${HOME}/.jupyter \
-    && chmod 777 -R ${HOME}/.local \
     && ln -s ${NOTEBOOK_DIR} /work
 # For Jupyter
 EXPOSE 8888
