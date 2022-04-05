@@ -223,7 +223,7 @@ FROM base
 RUN umask 000 && conda config --append channels defaults \
     && conda activate \
     && mamba install --yes -c pytorch -c nvidia \
-       pytorch torchvision av cudatoolkit=${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} \
+       pytorch torchvision av torchdata cudatoolkit=${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} \
        scipy \
        sympy \
        pandas \
@@ -258,7 +258,7 @@ RUN umask 000 \
     # && jupyter notebook --generate-config \
     && jupyter_lab_config=$(jupyter --config-dir)/jupyter_lab_config.py \
     && jupyter_notebook_config=$(jupyter --config-dir)/jupyter_notebook_config.py \
-    && mkdir -p ${DEFAULT_TEMPLATE_DIR} \
+    && mkdir -p ${DEFAULT_TEMPLATE_DIR}\
     && echo "c.ContentsManager.allow_hidden = True" >> ${jupyter_lab_config} \
     && echo "c.FileContentsManager.allow_hidden = True" >> ${jupyter_lab_config} \
     && echo "c.ServerApp.terminado_settings = {'shell_command': ['/usr/bin/bash']}" >> ${jupyter_lab_config} \
@@ -281,6 +281,8 @@ ENV LAUNCH_SCRIPT_PATH ${LAUNCH_SCRIPT_DIR}/run_jupyter.sh
 COPY --chmod=777 ["./run_jupyter.sh", "./entry.sh", "${LAUNCH_SCRIPT_DIR}/"]
 
 RUN chmod +x ${LAUNCH_SCRIPT_PATH} \
+    && chmod 777 -R ${HOME}/.jupyter \
+    && chmod 777 -R ${HOME}/.local \
     && ln -s ${NOTEBOOK_DIR} /work
 # For Jupyter
 EXPOSE 8888
