@@ -1,0 +1,19 @@
+services:
+  jupyter:
+    image: ghcr.io/koi-kojima/jupyter:v10.0-cuda
+    init: true
+    # ports:
+    #   - 9999:8888
+    volumes:
+      - /home/???/dir:/work
+    container_name: ???_jupyter
+    command: /bin/sh -c "while sleep 1000; do :; done"
+    environment:
+      - LOCAL_UID=???
+      - LOCAL_GID=???
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
