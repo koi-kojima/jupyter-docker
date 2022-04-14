@@ -30,11 +30,12 @@ def main(device: torch.device, mini_batch: int, is_gpu: bool, dataset_name: str)
         transforms.ToTensor(),
         transforms.Normalize((0.5,), (0.5,))
     ])
-    if not dataset_name or dataset_name == "QMNIST":
+    dataset_name = dataset_name.casefold()
+    if not dataset_name or dataset_name == "QMNIST".casefold() or dataset_name == "MNIST".casefold():
         dataset_class = torchvision.datasets.QMNIST
-    elif dataset_name == "FashionMNIST":
+    elif dataset_name == "FashionMNIST".casefold():
         dataset_class = torchvision.datasets.FashionMNIST
-    elif dataset_name == "KMNIST":
+    elif dataset_name == "KMNIST".casefold():
         dataset_class = torchvision.datasets.KMNIST
     else:
         raise ValueError(f"Unknown dataset {dataset_name=}")
