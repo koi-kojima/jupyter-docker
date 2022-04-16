@@ -244,7 +244,8 @@ RUN umask 000 && conda config --append channels defaults \
 ENV PATH $PATH:${HOME}/conda/bin
 
 COPY --from=opencv ["${HOME}/opencv/opencv-build", "${HOME}/opencv/opencv-build/"]
-RUN conda activate \
+RUN umask 000 \
+    && conda activate \
     && pip install ${HOME}/opencv/opencv-build/*.whl --no-cache-dir
 
 # Make symbolic link to a lib. Required for OpenCV and ffmpeg?
