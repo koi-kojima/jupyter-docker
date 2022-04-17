@@ -127,6 +127,7 @@ SHELL ["/bin/bash", "-l", "-c"]
 ENV PATH $HOME/.local/bin:$PATH
 
 FROM base as opencv
+ARG OPEN_CV_VERSION=${OPEN_CV_VERSION:-4.5.5}
 # Install OpenCV
 RUN umask 000 && mkdir ${HOME}/opencv ${HOME}/opencv/opencv-build && cd ${HOME}/opencv \
     && curl -L -o opencv-${OPEN_CV_VERSION}.zip "https://github.com/opencv/opencv/archive/${OPEN_CV_VERSION}.zip" \
@@ -218,6 +219,8 @@ RUN cd ${HOME}/opencv/opencv-${OPEN_CV_VERSION}/build/python_loader \
     && mv dist/*.whl ${HOME}/opencv/opencv-build/
 
 FROM base
+ARG CUDA_MAJOR_VERSION=${CUDA_MAJOR_VERSION:-11}
+ARG CUDA_MINOR_VERSION=${CUDA_MINOR_VERSION:-3}
 # Install Python library
 # Default channel is required to install latest version of torchvision.
 RUN umask 000 && conda config --append channels defaults \
