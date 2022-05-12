@@ -228,6 +228,7 @@ RUN umask 000 && conda config --append channels defaults \
     && mamba install --yes -c pytorch -c nvidia \
        pytorch torchvision av torchdata cudatoolkit=${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} \
        pytorch-lightning \
+       torchmetrics \
        scipy \
        sympy \
        pandas \
