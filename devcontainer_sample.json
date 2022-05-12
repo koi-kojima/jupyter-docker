@@ -1,40 +1,26 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
-// https://github.com/microsoft/vscode-dev-containers/tree/v0.194.0/containers/python-3
 {
 	"name": "Python 3 with Jupyter",
-	"image": "ghcr.io/koi-kojima/jupyter:v8.0-cuda",
-	// Change here
-	"workspaceMount": "source=vs-test-koi,target=/home/dev/notebooks,type=volume",
-	"workspaceFolder": "/home/dev/notebooks",
-  // Enable GPU
-	"runArgs": ["--gpus", "all"],
+	"dockerComposeFile": "compose.yml",
+	"service": "jupyter",
+	"workspaceFolder": "/work",
+	"shutdownAction": "stopCompose",
 
-	// Set *default* container specific settings.json values on container create.
 	"settings": { 
-		"python.pythonPath": "/home/dev/conda/envs/research/bin/python",
+		"python.pythonPath": "/home/dev/conda/bin/python",
 		"python.languageServer": "Pylance",
 		"jupyter.alwaysTrustNotebooks": true,
 		"python.linting.enabled": true,
 		"python.linting.pylintEnabled": true,
-		"python.formatting.autopep8Path": "/home/dev/conda/envs/research/bin/autopep8",
+		"python.formatting.autopep8Path": "/home/dev/conda/bin/autopep8",
 		"python.formatting.autopep8Args": ["--max-line-length", "120", "--experimental"],
-		"python.linting.pylintPath": "/home/dev/conda/envs/research/bin/pylint"
+		"python.linting.pylintPath": "/home/dev/conda/bin/pylint"
 	},
 
-	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
 		"ms-python.python",
 		"ms-python.vscode-pylance",
 		"visualstudioexptteam.vscodeintellicode"
 	],
 
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
-
-	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "pip3 install --user -r requirements.txt",
-
-	// Comment out connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
-	"remoteUser": "dev",
-	"containerUser": "dev"
+	"remoteUser": "dev"
 }
