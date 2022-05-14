@@ -278,7 +278,7 @@ RUN umask 000 \
     ${jupyter_lab_config} \
     # ${jupyter_notebook_config} \
     && mkdir -p $(jupyter --config-dir)/lab/user-settings/@jupyterlab 
-COPY --chmod=777 ["./check_gpu.py", "./mnist.py", "${DEFAULT_TEMPLATE_DIR}/"]
+COPY --chmod=777 ["./check_gpu.py", "./mnist.py", "./mnist2.py", "./mnist_dataset.py", "${DEFAULT_TEMPLATE_DIR}/"]
 COPY --chmod=777 ./jupyter_config/ ${HOME}/.jupyter/lab/user-settings/@jupyterlab/
 
 # Laucher

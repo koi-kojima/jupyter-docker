@@ -19,6 +19,7 @@ from torch import nn
 from torchvision import transforms
 # Utility
 from tqdm import trange, tqdm
+import mnist_dataset
 
 N = 30  # Train iteration count
 TEST_EPOCH = 5  # Evaluate test data for each TEST_EPOCH epochs.
@@ -30,15 +31,7 @@ def main(device: torch.device, mini_batch: int, is_gpu: bool, dataset_name: str)
         transforms.ToTensor(),
         transforms.Normalize((0.5,), (0.5,))
     ])
-    dataset_name = dataset_name.casefold()
-    if not dataset_name or dataset_name == "QMNIST".casefold() or dataset_name == "MNIST".casefold():
-        dataset_class = torchvision.datasets.QMNIST
-    elif dataset_name == "FashionMNIST".casefold():
-        dataset_class = torchvision.datasets.FashionMNIST
-    elif dataset_name == "KMNIST".casefold():
-        dataset_class = torchvision.datasets.KMNIST
-    else:
-        raise ValueError(f"Unknown dataset {dataset_name=}")
+    dataset_class = mnist_dataset.get_mnist_dataset(dataset_name)
 
     train = dataset_class(
         root="./data", train=True, download=True, transform=transform
@@ -181,7 +174,8 @@ def train_and_evaluate(device: torch.device, is_gpu: bool,
     return
 
 
-def make_graph(epochs, accuracy_log, device, loss_log, test_accuracy_log, test_epochs, test_loss_log, dataset_name: str):
+def make_graph(epochs, accuracy_log, device, loss_log, test_accuracy_log, test_epochs, test_loss_log,
+               dataset_name: str):
     dataset_name = dataset_name or 'QMNIST'
     fig: plt.Figure = plt.figure(figsize=(12, 9))
     ax1: plt.Axes = fig.add_subplot(1, 1, 1)
