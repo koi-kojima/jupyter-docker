@@ -1,9 +1,11 @@
 services:
   jupyter:
-    image: ghcr.io/koi-kojima/jupyter:v10.-cuda
+    image: ghcr.io/koi-kojima/jupyter:v10.2-cuda
     init: true
     # ports:
     #   - 9999:8888
+    #   - 9998:6006
+    #   - 9997:22
     volumes:
       - /home/???/dir:/work
     container_name: ???_jupyter
