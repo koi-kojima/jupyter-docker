@@ -151,6 +151,8 @@ RUN umask 000 && conda config --append channels defaults \
        pytorch torchvision av torchdata cudatoolkit=${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} \
        pytorch-lightning \
        torchmetrics \
+# The new version of grpc cause library error in launching tensorboard.
+       grpcio=1.42.0 \
        scipy \
        sympy \
        pandas \
