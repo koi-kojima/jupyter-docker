@@ -1,115 +1,103 @@
+FROM ubuntu:focal
 ARG CUDA_MAJOR_VERSION=${CUDA_MAJOR_VERSION:-11}
-ARG CUDA_MINOR_VERSION=${CUDA_MINOR_VERSION:-1}
-FROM nvidia/cuda:${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION}-cudnn8-runtime-ubuntu20.04
+ARG CUDA_MINOR_VERSION=${CUDA_MINOR_VERSION:-3}
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN adduser -q --gecos "" --disabled-password dev && \
-    sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/apt/sources.list && \
+RUN sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/apt/sources.list && \
     apt-get update --fix-missing -qq && apt-get install -y \
     curl \
-    gmp-ecm \
+    ca-certificates \
     ffmpeg \
     file \
     git \
     less \
     locales \
-    mesa-utils \
     neofetch \
     nkf \
     opencv-data \
-    pkg-config \
-    python3-opengl \
-    python3-vtk7 \
-    python3.9-dev \
-    qt5-default \
     ssh \
     sudo \
-    swig \
+    gosu \
     tree \
     unzip \
-    v4l-utils \
     vim \
     wget \
     x264 \
     xvfb \
     zip \
-    zsh \
     --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
-EXPOSE 22
 
 # SSH setting
 RUN sed -i -e "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" \
            -e "s/#PermitEmptyPasswords no/PermitEmptyPasswords yes/" \
            /etc/ssh/sshd_config && \
-    sed -i -e "s/root:x:/root::/g" -e "s/dev:x:/dev::/g" /etc/passwd && \
+    sed -i -e "s/root:x:/root::/g" /etc/passwd && \
     mkdir /run/sshd
 
+COPY --chmod=755 ["./setup_miniforge.sh", "/install_scripts/"]
+
+ENV PATH $HOME/conda/bin:$PATH
+ENV PATH $HOME/.local/bin:$PATH
 # Install Miniconda
-RUN curl -L -sS -o /home/dev/miniconda.sh "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh" \
-    && sudo -u dev --login /bin/bash /home/dev/miniconda.sh -b -p /home/dev/conda \
-    && rm /home/dev/miniconda.sh \
-    && ln -s /home/dev/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
-    && sudo -u dev --login /home/dev/conda/bin/conda update conda --quiet --yes >/dev/null \
-    && sudo -u dev --login /home/dev/conda/bin/conda create --yes -n research -c conda-forge python=3.9 mamba \
-    && sudo -u dev --login /home/dev/conda/bin/conda clean --yes --index-cache >/dev/null \
-    && echo ". /home/dev/conda/etc/profile.d/conda.sh" >> ~/.bashrc \
-    && echo "conda activate research" >> ~/.bashrc \
-    && ln -s /home/dev/conda/envs/research/bin/python /usr/bin/python
+RUN /install_scripts/setup_miniforge.sh
 SHELL ["/bin/bash", "-l", "-c"]
 
-USER dev
-WORKDIR /home/dev
-ENV HOME /home/dev
-ENV PATH /home/dev/conda/bin:$PATH
-ENV PATH $HOME/.local/bin:$PATH
-ENV PATH $PATH:/home/dev/conda/envs/research/bin
 # Install Python library
-RUN mamba install --yes -c pytorch -c nvidia -c conda-forge \
-    pytorch \
-    cudatoolkit=11.1 \
-    torchvision \
-    # torchaudio \
-    && mamba install --yes -c conda-forge \
-    scipy \
-    sympy \
-    pandas \
-    openpyxl \
-    pytables \
-    seaborn \
-    scikit-learn \
-    scikit-image \
-    jedi jupyterlab jupyterlab-git ipywidgets \
-    && conda config --add channels conda-forge \
-    && conda activate research \
+RUN conda config --append channels defaults \
+    && conda activate \
+    && mamba install --yes -c pytorch -c nvidia \
+       pytorch torchvision av torchdata cudatoolkit=${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} \
+       pytorch-lightning \
+       torchmetrics \
+# The new version of grpc cause library error in launching tensorboard.
+       grpcio=1.42.0 \
+       scipy \
+       sympy \
+       pandas \
+       openpyxl \
+       pytables \
+       h5py \
+       seaborn \
+       scikit-learn \
+       scikit-image \
+       tqdm \
+       umap-learn \
+       jedi jupyterlab nodejs jupyterlab-git ipywidgets \
+       pylint autopep8 \
+    && conda config --remove channels defaults \
 # Pip Install
-    && pip install opencv-python japanize-matplotlib torchinfo --no-cache-dir \
-    && conda clean -y --all &>/dev/null && chown -hR dev:dev /home/dev/conda/ \
-    && echo ". /home/dev/conda/etc/profile.d/conda.sh" >> ~/.bashrc \
-    && echo "conda activate research" >> ~/.bashrc
+    && pip install japanize-matplotlib torchinfo pytorchvideo opencv-python --no-cache-dir \
+    && mamba clean -y --all &> /dev/null
 
 # Install Jupyter lab extensions
-ENV NOTEBOOK_DIR /home/dev/notebooks
-RUN jupyter lab --generate-config \
+ENV NOTEBOOK_DIR ${HOME}/notebooks
+ENV DEFAULT_TEMPLATE_DIR ${NOTEBOOK_DIR}/templates
+RUN conda activate \
+    && jupyter lab --generate-config \
+    # && jupyter notebook --generate-config \
     && jupyter_lab_config=$(jupyter --config-dir)/jupyter_lab_config.py \
+    && jupyter_notebook_config=$(jupyter --config-dir)/jupyter_notebook_config.py \
+    && mkdir -p ${DEFAULT_TEMPLATE_DIR}\
     && echo "c.ContentsManager.allow_hidden = True" >> ${jupyter_lab_config} \
     && echo "c.FileContentsManager.allow_hidden = True" >> ${jupyter_lab_config} \
-    && echo "c.ServerApp.tornado_settings = {'shell_command': ['bash']}" >> ${jupyter_lab_config} \
+    && echo "c.ServerApp.terminado_settings = {'shell_command': ['/usr/bin/bash']}" >> ${jupyter_lab_config} \
     && sed -i \
-    -e "s/# c.ServerApp.ip = 'localhost'/c.ServerApp.ip = '0.0.0.0'/" \
-    -e "s/# c.ServerApp.allow_root = False/c.ServerApp.allow_root = True/" \
-    -e "s/# c.ServerApp.allow_remote_access = False/c.ServerApp.allow_remote_access = True/" \
-    -e "s:# c.ServerApp.root_dir = '':c.ServerApp.root_dir = '$NOTEBOOK_DIR':" \
+    -e "s/# c.\(.*\).ip = 'localhost'/c.\1.ip = '0.0.0.0'/" \
+    -e "s/# c.\(.*\).allow_root = False/c.\1.allow_root = True/" \
+    -e "s/# c.\(.*\).allow_remote_access = False/c.\1.allow_remote_access = True/" \
+    -e "s:# c.\(.*\).root_dir = '':c.\1.root_dir = '$NOTEBOOK_DIR':" \
+    -e "s/# c.\(.*\).allow_hidden = False/c.\1.allow_hidden = True/" \
+    -e "s/# c.\(.*\).open_browser = True/c.\1.open_browser = False/" \
     ${jupyter_lab_config} \
-    && mkdir -p ~/.jupyter/lab/user-settings/@jupyterlab \
-    && mkdir -p "$NOTEBOOK_DIR" \
-    && mkdir -p /home/dev/.local/bin/
-COPY --chown=dev:dev ./jupyter_config/ /home/dev/.jupyter/lab/user-settings/@jupyterlab/
-COPY --chown=dev:dev ./run_jupyter.sh /home/dev/.local/bin/
+    # ${jupyter_notebook_config} \
+    && mkdir -p $(jupyter --config-dir)/lab/user-settings/@jupyterlab
+COPY ./jupyter_config/ $HOME/.jupyter/lab/user-settings/@jupyterlab/
+COPY --chmod=755 ["./check_gpu.py", "./mnist*.py", "${DEFAULT_TEMPLATE_DIR}/"]
+COPY --chmod=755 ./run_jupyter.sh $HOME/.local/bin/
 
-USER root
 EXPOSE 8888
-CMD ["/usr/sbin/sshd", "-D"]
-
+EXPOSE 22
+CMD ["run_jupyter.sh"]
