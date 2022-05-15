@@ -1,7 +1,9 @@
-FROM ubuntu:focal
+ARG CUDA_RELEASE_VERSION=${CUDA_RELEASE_VERSION:-11.3.1}
+FROM nvidia/cuda:${CUDA_RELEASE_VERSION}-base-ubuntu20.04
 ARG CUDA_MAJOR_VERSION=${CUDA_MAJOR_VERSION:-11}
 ARG CUDA_MINOR_VERSION=${CUDA_MINOR_VERSION:-3}
 
+ENV HOME /root
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/apt/sources.list && \
@@ -21,10 +23,6 @@ RUN sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/a
     gosu \
     tree \
     unzip \
-    vim \
-    wget \
-    x264 \
-    xvfb \
     zip \
     --no-install-recommends \
     && apt-get clean \
@@ -94,6 +92,7 @@ RUN conda activate \
     ${jupyter_lab_config} \
     # ${jupyter_notebook_config} \
     && mkdir -p $(jupyter --config-dir)/lab/user-settings/@jupyterlab
+
 COPY ./jupyter_config/ $HOME/.jupyter/lab/user-settings/@jupyterlab/
 COPY --chmod=755 ["./check_gpu.py", "./mnist*.py", "${DEFAULT_TEMPLATE_DIR}/"]
 COPY --chmod=755 ./run_jupyter.sh $HOME/.local/bin/
