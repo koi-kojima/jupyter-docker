@@ -55,7 +55,6 @@ RUN conda config --append channels defaults \
        scipy \
        sympy \
        pandas \
-       openpyxl \
        pytables \
        h5py \
        seaborn \
@@ -67,7 +66,7 @@ RUN conda config --append channels defaults \
        pylint autopep8 \
     && conda config --remove channels defaults \
 # Pip Install
-    && pip install japanize-matplotlib torchinfo pytorchvideo opencv-python --no-cache-dir \
+    && pip install japanize-matplotlib torchinfo pytorchvideo opencv-python opencv-contrib-python --no-cache-dir \
     && mamba clean -y --all &> /dev/null
 
 # Install Jupyter lab extensions
@@ -91,7 +90,8 @@ RUN conda activate \
     -e "s/# c.\(.*\).open_browser = True/c.\1.open_browser = False/" \
     ${jupyter_lab_config} \
     # ${jupyter_notebook_config} \
-    && mkdir -p $(jupyter --config-dir)/lab/user-settings/@jupyterlab
+    && mkdir -p $(jupyter --config-dir)/lab/user-settings/@jupyterlab \
+    && ln -s ${NOTEBOOK_DIR} /work
 
 COPY ./jupyter_config/ $HOME/.jupyter/lab/user-settings/@jupyterlab/
 COPY --chmod=755 ["./check_gpu.py", "./mnist*.py", "${DEFAULT_TEMPLATE_DIR}/"]
