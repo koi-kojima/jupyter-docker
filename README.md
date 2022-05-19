@@ -7,7 +7,7 @@ Docker image of jupyterlab with PyTorch
 See https://github.com/users/koi-kojima/packages/container/package/jupyter
 
 Postfix "cuda" means opencv is built with cuda.
-This image is based on cuda11.1 and cudnn8 from nvidia image, so PyTorch can use gpus in the image.
+This image is based on cuda11.3 and cudnn8 from nvidia image, so PyTorch can use gpus in the image.
 
 ## Installed Libraries
 
@@ -22,7 +22,6 @@ This image is based on cuda11.1 and cudnn8 from nvidia image, so PyTorch can use
   * [pandas](https://pandas.pydata.org/docs/index.html)
   * [PyTables](https://pypi.org/project/tables/)
   * [h5py](https://docs.h5py.org/en/stable/)
-  * [openpyxl](https://openpyxl.readthedocs.io/en/stable/)
 * Graph
   * [matplotlib](https://matplotlib.org/stable/api/index.html)
   * [seaborn](https://seaborn.pydata.org/)
@@ -43,7 +42,9 @@ This image is based on cuda11.1 and cudnn8 from nvidia image, so PyTorch can use
 * Machine Learning
   * [scikit-learn](https://scikit-learn.org/stable/user_guide.html)
   * [PyTorch(with CUDA)](https://pytorch.org/)
-  * [torchvision](https://pytorch.org/vision/stable/index.html)
+    * [torchvision](https://pytorch.org/vision/stable/index.html)
+    * [Pytorch Lightning](https://www.pytorchlightning.ai/)
+    * [TorchMetrics](https://torchmetrics.readthedocs.io/en/stable/)
 
 ## How to use
 
