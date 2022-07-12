@@ -1,7 +1,7 @@
 ARG CUDA_MAJOR_VERSION=${CUDA_MAJOR_VERSION:-11}
 ARG CUDA_MINOR_VERSION=${CUDA_MINOR_VERSION:-3}
 
-FROM nvidia/cuda:11.3.1-cudnn8-devel-ubuntu20.04 as base
+FROM nvidia/cuda:11.3.1-cudnn8-devel-ubuntu20.04 as opencv
 ARG CUDA_MAJOR_VERSION=${CUDA_MAJOR_VERSION:-11}
 ARG CUDA_MINOR_VERSION=${CUDA_MINOR_VERSION:-3}
 
@@ -11,123 +11,16 @@ RUN umask 000 && mkdir /home/dev
 WORKDIR /home/dev
 ENV HOME /home/dev
 ENV PATH ${HOME}/conda/bin:$PATH
-
-RUN umask 000 \
-    && sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/apt/sources.list \
-    && apt-get update --fix-missing -qq \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    autoconf \
-    autoconf-archive \
-    automake \
-    ccache \
-    cmake \
-    curl \
-    gmp-ecm \
-    extra-cmake-modules \
-    ffmpeg \
-    file \
-    g++ \
-    gcc \
-    git \
-    gphoto2 \
-    gosu \
-    less \
-    libavcodec-dev \
-    libavformat-dev \
-    libboost-all-dev \
-    libdc1394-22 \
-    libdc1394-22-dev \
-    libeigen3-dev \
-    libeigen3-doc \
-    libfaac-dev \
-    libgflags-dev \
-    libgl1-mesa-glx \
-    libglfw3 \
-    libgtk-3-dev \
-    libjpeg-dev \
-    liblapacke-dev \
-    libleptonica-dev \
-    libmp3lame-dev \
-    libogre-1.9-dev \
-    libopencore-amrnb-dev \
-    libopencore-amrwb-dev \
-    libosmesa6-dev \
-    libpng-dev \
-    libsdl2-dev \
-    libswscale-dev \
-    libtbb-dev \
-    libtesseract-dev \
-    libtheora-dev \
-    libtiff5-dev \
-    libtool \
-    libv4l-dev \
-    libvorbis-dev \
-    libxine2-dev \
-    libxvidcore-dev \
-    locales \
-    mesa-utils \
-    neofetch \
-    nkf \
-    patchelf \
-    pkg-config \
-    python3-opengl \
-    python3-vtk7 \
-    python3.9-dev \
-    qt5-default \
-    ssh \
-    sudo \
-    swig \
-    tcl-vtk7 \
-    tesseract-ocr \
-    tesseract-ocr-jpn \
-    tree \
-    unzip \
-    v4l-utils \
-    vim \
-    vtk7 \
-    wget \
-    x264 \
-    xvfb \
-    yasm \
-    zip \
-    zlib1g-dev \
-    zsh \
-    --no-install-recommends \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
-
-# SSH abd sudo setting
-RUN sed -i -e "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" \
-           -e "s/#PermitEmptyPasswords no/PermitEmptyPasswords yes/" \
-           /etc/ssh/sshd_config && \
-    sed -i -e "s/root:x:/root::/g" /etc/passwd && \
-    mkdir /run/sshd && \
-    echo "dev ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/dev && \
-    chmod 0440 /etc/sudoers.d/dev
-
-# Copy initial scripts
-RUN sed -i -e "s/#force_color_prompt=yes/force_color_prompt=yes/g" /root/.bashrc \
-    && cp /root/.bashrc /root/.profile ${HOME}/ \
-    && chmod 777 ${HOME}/.bashrc ${HOME}/.profile
-
-# Install miniforge
-RUN umask 000 \
-    && curl -L -sS -o ${HOME}/miniforge.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh" \
-    && /bin/bash ${HOME}/miniforge.sh -b -p ${HOME}/conda \
-    && rm ${HOME}/miniforge.sh \
-    && ln -s ${HOME}/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
-    && conda update conda --quiet --yes > /dev/null \
-    && conda install --yes python=3.9 numpy \
-    && conda clean --yes --index-cache > /dev/null \
-    && echo ". ${HOME}/conda/etc/profile.d/conda.sh" >> ${HOME}/.bashrc \
-    && echo "conda activate" >> ${HOME}/.bashrc \
-    && ln -s ${HOME}/conda/bin/python /usr/bin/python
-SHELL ["/bin/bash", "-l", "-c"]
-
 ENV PATH $HOME/.local/bin:$PATH
 
-FROM base as opencv
-ARG OPEN_CV_VERSION=${OPEN_CV_VERSION:-4.5.5}
+COPY --chmod=755 ["./apt_install.sh", "./setup_miniforge.sh", "/install_scripts/"]
+
+RUN umask 000 && /install_scripts/apt_install.sh
+
+# Install miniforge
+RUN umask 000 && /install_scripts/setup_miniforge.sh
+SHELL ["/bin/bash", "-l", "-c"]
+
 # Install OpenCV
 RUN umask 000 && mkdir ${HOME}/opencv ${HOME}/opencv/opencv-build && cd ${HOME}/opencv \
     && curl -L -o opencv-${OPEN_CV_VERSION}.zip "https://github.com/opencv/opencv/archive/${OPEN_CV_VERSION}.zip" \
@@ -218,9 +111,38 @@ RUN cd ${HOME}/opencv/opencv-${OPEN_CV_VERSION}/build/python_loader \
     && python setup.py bdist_wheel \
     && mv dist/*.whl ${HOME}/opencv/opencv-build/
 
-FROM base
+FROM nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04
 ARG CUDA_MAJOR_VERSION=${CUDA_MAJOR_VERSION:-11}
 ARG CUDA_MINOR_VERSION=${CUDA_MINOR_VERSION:-3}
+
+ENV HOME /home/dev
+ENV PATH ${HOME}/conda/bin:$PATH
+ENV PATH $HOME/.local/bin:$PATH
+
+COPY --chmod=755 ["./apt_install.sh", "./setup_miniforge.sh", "/install_scripts/"]
+
+RUN umask 000 && \
+    mkdir /home/dev && \
+    /install_scripts/apt_install.sh && \
+    /install_scripts/setup_miniforge.sh
+WORKDIR /home/dev
+
+SHELL ["/bin/bash", "-l", "-c"]
+
+# SSH abd sudo setting
+RUN sed -i -e "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" \
+           -e "s/#PermitEmptyPasswords no/PermitEmptyPasswords yes/" \
+           /etc/ssh/sshd_config && \
+    sed -i -e "s/root:x:/root::/g" /etc/passwd && \
+    mkdir /run/sshd && \
+    echo "dev ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/dev && \
+    chmod 0440 /etc/sudoers.d/dev
+
+# Copy initial scripts
+RUN sed -i -e "s/#force_color_prompt=yes/force_color_prompt=yes/g" /root/.bashrc \
+    && cp /root/.bashrc /root/.profile ${HOME}/ \
+    && chmod 777 ${HOME}/.bashrc ${HOME}/.profile
+
 # Install Python library
 # Default channel is required to install latest version of torchvision.
 RUN umask 000 && conda config --append channels defaults \
@@ -229,6 +151,8 @@ RUN umask 000 && conda config --append channels defaults \
        pytorch torchvision av torchdata cudatoolkit=${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} \
        pytorch-lightning \
        torchmetrics \
+# The new version of grpc cause library error in launching tensorboard.
+       grpcio=1.42.0 \
        scipy \
        sympy \
        pandas \

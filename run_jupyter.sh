@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
 set -e
 
-/home/dev/conda/bin/jupyter lab --no-browser
-
+${HOME}/conda/bin/jupyter lab --no-browser
