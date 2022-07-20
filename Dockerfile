@@ -13,7 +13,7 @@ ENV HOME /home/dev
 ENV PATH ${HOME}/conda/bin:$PATH
 ENV PATH $HOME/.local/bin:$PATH
 
-COPY --chmod=755 ["./scripts/apt_install.sh", "./scripts/setup_miniforge.sh", "/install_scripts/"]
+COPY --chmod=755 ["./scripts/apt_install.sh", "./scripts/setup_miniforge.sh", "./scripts/jupyter_setting.sh", "/install_scripts/"]
 
 RUN umask 000 && /install_scripts/apt_install.sh
 
@@ -184,25 +184,8 @@ RUN ln -s ${HOME}/conda/lib/libopenh264.so ${HOME}/conda/lib/libopenh264.so.5
 ENV NOTEBOOK_DIR ${HOME}/notebooks
 ENV DEFAULT_TEMPLATE_DIR ${NOTEBOOK_DIR}/templates
 RUN umask 000 \
-    && jupyter lab --generate-config \
-    # && jupyter notebook --generate-config \
-    && jupyter_lab_config=$(jupyter --config-dir)/jupyter_lab_config.py \
-    && jupyter_notebook_config=$(jupyter --config-dir)/jupyter_notebook_config.py \
-    && mkdir -p ${DEFAULT_TEMPLATE_DIR}\
-    && echo "c.ContentsManager.allow_hidden = True" >> ${jupyter_lab_config} \
-    && echo "c.FileContentsManager.allow_hidden = True" >> ${jupyter_lab_config} \
-    && echo "c.ServerApp.terminado_settings = {'shell_command': ['/usr/bin/bash']}" >> ${jupyter_lab_config} \
-    && sed -i \
-    -e "s/# c.\(.*\).ip = 'localhost'/c.\1.ip = '0.0.0.0'/" \
-    -e "s/# c.\(.*\).allow_root = False/c.\1.allow_root = True/" \
-    -e "s/# c.\(.*\).allow_remote_access = False/c.\1.allow_remote_access = True/" \
-    -e "s:# c.\(.*\).root_dir = '':c.\1.root_dir = '$NOTEBOOK_DIR':" \
-    -e "s/# c.\(.*\).allow_hidden = False/c.\1.allow_hidden = True/" \
-    -e "s/# c.\(.*\).open_browser = True/c.\1.open_browser = False/" \
-    ${jupyter_lab_config} \
-    # ${jupyter_notebook_config} \
-    && mkdir -p $(jupyter --config-dir)/lab/user-settings/@jupyterlab 
-COPY --chmod=777 ["./check_gpu.py", "./mnist.py", "./mnist2.py", "./mnist_dataset.py", "${DEFAULT_TEMPLATE_DIR}/"]
+    && /install_scripts/jupyter_setting.sh
+COPY --chmod=755 ["./check_gpu.py", "./mnist*.py", "${DEFAULT_TEMPLATE_DIR}/"]
 COPY --chmod=777 ./jupyter_config/ ${HOME}/.jupyter/lab/user-settings/@jupyterlab/
 
 # Laucher
@@ -212,8 +195,7 @@ COPY --chmod=777 ["./scripts/run_jupyter.sh", "./scripts/entry.sh", "${LAUNCH_SC
 
 RUN chmod +x ${LAUNCH_SCRIPT_PATH} \
     && chmod 777 -R ${HOME}/.jupyter \
-    && chmod 777 -R ${HOME}/.local \
-    && ln -s ${NOTEBOOK_DIR} /work
+    && chmod 777 -R ${HOME}/.local
 # For Jupyter
 EXPOSE 8888
 # For SSH
