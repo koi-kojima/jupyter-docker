@@ -35,7 +35,7 @@ RUN sed -i -e "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" \
     sed -i -e "s/root:x:/root::/g" /etc/passwd && \
     mkdir /run/sshd
 
-COPY --chmod=755 ["./setup_miniforge.sh", "/install_scripts/"]
+COPY --chmod=755 ["./scripts/setup_miniforge.sh", "/install_scripts/"]
 
 ENV PATH $HOME/conda/bin:$PATH
 ENV PATH $HOME/.local/bin:$PATH
@@ -95,7 +95,7 @@ RUN conda activate \
 
 COPY ./jupyter_config/ $HOME/.jupyter/lab/user-settings/@jupyterlab/
 COPY --chmod=755 ["./check_gpu.py", "./mnist*.py", "${DEFAULT_TEMPLATE_DIR}/"]
-COPY --chmod=755 ./run_jupyter.sh $HOME/.local/bin/
+COPY --chmod=755 ./scripts/run_jupyter.sh $HOME/.local/bin/
 
 EXPOSE 8888
 EXPOSE 22

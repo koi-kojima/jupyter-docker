@@ -13,7 +13,7 @@ ENV HOME /home/dev
 ENV PATH ${HOME}/conda/bin:$PATH
 ENV PATH $HOME/.local/bin:$PATH
 
-COPY --chmod=755 ["./apt_install.sh", "./setup_miniforge.sh", "/install_scripts/"]
+COPY --chmod=755 ["./scripts/apt_install.sh", "./scripts/setup_miniforge.sh", "/install_scripts/"]
 
 RUN umask 000 && /install_scripts/apt_install.sh
 
@@ -208,7 +208,7 @@ COPY --chmod=777 ./jupyter_config/ ${HOME}/.jupyter/lab/user-settings/@jupyterla
 # Laucher
 ENV LAUNCH_SCRIPT_DIR ${HOME}/.local/bin
 ENV LAUNCH_SCRIPT_PATH ${LAUNCH_SCRIPT_DIR}/run_jupyter.sh
-COPY --chmod=777 ["./run_jupyter.sh", "./entry.sh", "${LAUNCH_SCRIPT_DIR}/"]
+COPY --chmod=777 ["./scripts/run_jupyter.sh", "./scripts/entry.sh", "${LAUNCH_SCRIPT_DIR}/"]
 
 RUN chmod +x ${LAUNCH_SCRIPT_PATH} \
     && chmod 777 -R ${HOME}/.jupyter \
