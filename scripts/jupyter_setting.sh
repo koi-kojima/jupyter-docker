@@ -1,11 +1,10 @@
 #! /usr/bin/env bash
-set -eux
 
 JUPYTER_TOKEN=password_koi-jyputer
-
-conda activate
-jupyter lab --generate-config
-jupyter_lab_config="$(jupyter --config-dir)/jupyter_lab_config.py"
+set -eux
+# conda activate
+${HOME}/conda/bin/jupyter lab --generate-config
+jupyter_lab_config="$(${HOME}/conda/bin/jupyter --config-dir)/jupyter_lab_config.py"
 mkdir -p "${DEFAULT_TEMPLATE_DIR}"
 
 echo "c.ContentsManager.allow_hidden = True" >> ${jupyter_lab_config}
@@ -18,8 +17,8 @@ sed -i \
     -e "s:# c.\(.*\).root_dir = '':c.\1.root_dir = '$NOTEBOOK_DIR':" \
     -e "s/# c.\(.*\).allow_hidden = False/c.\1.allow_hidden = True/" \
     -e "s/# c.\(.*\).open_browser = True/c.\1.open_browser = False/" \
-    -e "s/# c.ServerApp.token = '<generated>'/c.ServerApp.token = '$JUPYTER_TOKEN'"
+    -e "s/# c.ServerApp.token = '<generated>'/c.ServerApp.token = '$JUPYTER_TOKEN'/" \
     ${jupyter_lab_config}
 
-mkdir -p "$(jupyter --config-dir)/lab/user-settings/@jupyterlab"
+mkdir -p "$(${HOME}/conda/bin/jupyter --config-dir)/lab/user-settings/@jupyterlab"
 ln -s ${NOTEBOOK_DIR} /work

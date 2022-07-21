@@ -46,7 +46,7 @@ SHELL ["/bin/bash", "-l", "-c"]
 # Install Python library
 RUN conda config --append channels defaults \
     && conda activate \
-    && mamba install --yes -c pytorch -c nvidia \
+    && mamba install --yes -c pytorch \
        pytorch torchvision av torchdata cudatoolkit=${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} \
        pytorch-lightning \
        torchmetrics \
