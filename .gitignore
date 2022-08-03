@@ -1,3 +1,4 @@
 /.idea
 data/
 *.pdf
+lightning_logs
