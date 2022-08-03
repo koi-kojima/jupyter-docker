@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 set -eux
 
-PYTHON_VER=3.9
+PYTHON_VER=3.10
 
 curl -L -sS -o ${HOME}/miniforge.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
 /bin/bash ${HOME}/miniforge.sh -b -p ${HOME}/conda

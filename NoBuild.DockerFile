@@ -1,13 +1,12 @@
-ARG CUDA_RELEASE_VERSION=${CUDA_RELEASE_VERSION:-11.3.1}
-FROM nvidia/cuda:${CUDA_RELEASE_VERSION}-base-ubuntu20.04
+FROM ubuntu:jammy
 ARG CUDA_MAJOR_VERSION=${CUDA_MAJOR_VERSION:-11}
-ARG CUDA_MINOR_VERSION=${CUDA_MINOR_VERSION:-3}
+ARG CUDA_MINOR_VERSION=${CUDA_MINOR_VERSION:-6}
 
 ENV HOME /root
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/apt/sources.list && \
-    apt-get update --fix-missing -qq && apt-get install -y \
+# RUN sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/apt/sources.list && \
+RUN apt-get update --fix-missing -qq && apt-get install -y \
     curl \
     ca-certificates \
     ffmpeg \

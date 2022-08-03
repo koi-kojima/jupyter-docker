@@ -1,5 +1,6 @@
 #! /usr/bin/env bash
 
+PYTHON_VER=3.9
 sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/apt/sources.list
 apt-get update --fix-missing -qq
 DEBIAN_FRONTEND=noninteractive apt-get install -y \
@@ -59,7 +60,7 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y \
     pkg-config \
     python3-opengl \
     python3-vtk7 \
-    python3.9-dev \
+    "python${PYTHON_VER}-dev" \
     qt5-default \
     ssh \
     sudo \

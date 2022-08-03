@@ -107,7 +107,7 @@ RUN umask 000 \
 RUN cd ${HOME}/opencv/opencv-${OPEN_CV_VERSION}/build/python_loader \
     && sed -i -e "/],/a include_package_data=True," -e "/],/a zip_safe=False," setup.py \
     && sed -i -e "s:opencv-${OPEN_CV_VERSION}/build:opencv-build:" cv2/config.py \
-    && sed -i -e "s:opencv-${OPEN_CV_VERSION}/build/lib/python3:opencv-build/lib/python3.9/site-packages/cv2/python-3.9:" cv2/config-3.9.py \
+    && sed -i -e "s:opencv-${OPEN_CV_VERSION}/build/lib/python3:opencv-build/lib/python3.10/site-packages/cv2/python-3.10:" cv2/config-3.10.py \
     && python setup.py bdist_wheel \
     && mv dist/*.whl ${HOME}/opencv/opencv-build/
 
