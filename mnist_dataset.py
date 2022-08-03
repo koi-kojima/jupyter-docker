@@ -10,10 +10,10 @@ __all__ = [
 # noinspection SpellCheckingInspection
 def get_mnist_dataset(dataset_name: str) -> Type[MNIST]:
     dataset_name = dataset_name.casefold()
-    if not dataset_name or dataset_name == "QMNIST".casefold():
-        return QMNIST
-    elif dataset_name == "MNIST".casefold():
+    if not dataset_name or dataset_name == "MNIST".casefold():
         return MNIST
+    elif dataset_name == "QMNIST".casefold():
+        return QMNIST
     elif dataset_name == "FashionMNIST".casefold():
         return FashionMNIST
     elif dataset_name == "KMNIST".casefold():

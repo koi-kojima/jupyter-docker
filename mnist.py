@@ -176,7 +176,7 @@ def train_and_evaluate(device: torch.device, is_gpu: bool,
 
 def make_graph(epochs, accuracy_log, device, loss_log, test_accuracy_log, test_epochs, test_loss_log,
                dataset_name: str):
-    dataset_name = dataset_name or 'QMNIST'
+    dataset_name = dataset_name or 'MNIST'
     fig: plt.Figure = plt.figure(figsize=(12, 9))
     ax1: plt.Axes = fig.add_subplot(1, 1, 1)
     ax2: plt.Axes = ax1.twinx()
@@ -206,7 +206,7 @@ if __name__ == '__main__':
     parser.add_argument(
         "device", choices=["gpu", "cpu"], help="device where this program works", )
     parser.add_argument("-b", "--batch", type=int, help="batch size (default=512)", default=512)
-    parser.add_argument("-d", "--dataset", type=str, help="dataset name (default=QMNIST)", default="QMNIST")
+    parser.add_argument("-d", "--dataset", type=str, help="dataset name (default=MNIST)", default="MNIST")
     args = parser.parse_args()
 
     is_cuda_available = torch.cuda.is_available()
