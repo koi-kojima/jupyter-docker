@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-PYTHON_VER=3.9
+PYTHON_VER=3.10
 sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/apt/sources.list
 apt-get update --fix-missing -qq
 DEBIAN_FRONTEND=noninteractive apt-get install -y \
