@@ -7,7 +7,7 @@ ENV HOME /root
 ENV DEBIAN_FRONTEND=noninteractive
 
 # RUN sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/apt/sources.list && \
-RUN apt-get update --fix-missing -qq && apt-get install -y \
+RUN apt-get update --fix-missing && apt-get install -y \
     curl \
     ca-certificates \
     ffmpeg \
