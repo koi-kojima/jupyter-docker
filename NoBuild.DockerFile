@@ -66,7 +66,14 @@ RUN conda config --append channels defaults \
        pylint autopep8 \
     && conda config --remove channels defaults \
 # Pip Install
-    && pip install japanize-matplotlib torchinfo pytorchvideo opencv-python opencv-contrib-python --no-cache-dir \
+    && pip install \
+       japanize-matplotlib \
+       torchinfo \
+       pytorchvideo \
+       opencv-python \
+       opencv-contrib-python \
+       hydra-core \
+       --no-cache-dir \
     && mamba clean -y --all &> /dev/null
 
 # Install Jupyter lab extensions

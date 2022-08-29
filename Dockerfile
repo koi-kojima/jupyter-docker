@@ -168,7 +168,12 @@ RUN umask 000 && conda config --append channels defaults \
        pylint autopep8 \
     && conda config --remove channels defaults \
 # Pip Install
-    && pip install japanize-matplotlib torchinfo pytorchvideo --no-cache-dir \
+    && pip install \
+       japanize-matplotlib \
+       torchinfo \
+       pytorchvideo \
+       hydra-core \
+       --no-cache-dir \
     && mamba clean -y --all &> /dev/null
 ENV PATH $PATH:${HOME}/conda/bin
 
