@@ -1,6 +1,8 @@
 from typing import Type
 
-from torchvision.datasets import MNIST, QMNIST, FashionMNIST, KMNIST
+from torch.utils.data import Dataset
+from torchvision.datasets import MNIST, FashionMNIST, KMNIST
+from qmnist import QMNIST
 
 __all__ = [
     "get_mnist_dataset",
@@ -8,7 +10,7 @@ __all__ = [
 
 
 # noinspection SpellCheckingInspection
-def get_mnist_dataset(dataset_name: str) -> Type[MNIST]:
+def get_mnist_dataset(dataset_name: str) -> Type[Dataset]:
     dataset_name = dataset_name.casefold()
     if not dataset_name or dataset_name == "MNIST".casefold():
         return MNIST

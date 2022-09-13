@@ -82,7 +82,7 @@ ENV DEFAULT_TEMPLATE_DIR ${NOTEBOOK_DIR}/templates
 RUN /install_scripts/jupyter_setting.sh
 
 COPY ./jupyter_config/ $HOME/.jupyter/lab/user-settings/@jupyterlab/
-COPY --chmod=755 ["./check_gpu.py", "./mnist*.py", "${DEFAULT_TEMPLATE_DIR}/"]
+COPY --chmod=755 ["./check_gpu.py", "./mnist*.py", "./qmnist.py", "${DEFAULT_TEMPLATE_DIR}/"]
 COPY --chmod=755 ./scripts/run_jupyter.sh $HOME/.local/bin/
 
 EXPOSE 8888

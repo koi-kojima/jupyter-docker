@@ -127,7 +127,7 @@ def main():
 
     model = MNISTModel()
     loader = MNISTLoader(args.batch, args.dataset)
-    trainer = Trainer(max_epochs=args.epoch, gpus=1 if args.device == "gpu" else 0)
+    trainer = Trainer(max_epochs=args.epoch, accelerator=args.device, devices=1)
     trainer.fit(model, loader)
     trainer.validate(model, loader)
     trainer.test(model, loader)
