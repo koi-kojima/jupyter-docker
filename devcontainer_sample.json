@@ -1,26 +1,37 @@
 {
-	"name": "Python 3 with Jupyter",
-	"dockerComposeFile": "compose.yml",
-	"service": "jupyter",
-	"workspaceFolder": "/work",
-	"shutdownAction": "stopCompose",
-
-	"settings": { 
-		"python.pythonPath": "/home/dev/conda/bin/python",
-		"python.languageServer": "Pylance",
-		"jupyter.alwaysTrustNotebooks": true,
-		"python.linting.enabled": true,
-		"python.linting.pylintEnabled": true,
-		"python.formatting.autopep8Path": "/home/dev/conda/bin/autopep8",
-		"python.formatting.autopep8Args": ["--max-line-length", "120", "--experimental"],
-		"python.linting.pylintPath": "/home/dev/conda/bin/pylint"
-	},
-
-	"extensions": [
-		"ms-python.python",
-		"ms-python.vscode-pylance",
-		"visualstudioexptteam.vscodeintellicode"
-	],
-
-	"remoteUser": "dev"
+  "name": "Python3-Jupyter",
+  "image": "ghcr.io/koi-kojima/jupyter:v12.4-mini",
+  "runArgs": [
+    "--init",
+    "--gpus",
+    "all"
+  ],
+  "mounts": [
+    // Comment out this line and change source for you. Do not chagne target and bind option.
+    // "source=/your/home/path,target=/work,type=bind,consistency=cached"
+  ],
+  "workspaceMount": "", // Should be empty
+  "workspaceFolder": "/work",
+  "extensions": [
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "visualstudioexptteam.vscodeintellicode"
+  ],
+  "settings": {
+    "python.pythonPath": "/root/conda/bin/python",
+    "python.languageServer": "Pylance",
+    "jupyter.alwaysTrustNotebooks": true,
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.formatting.autopep8Path": "/root/conda/bin/autopep8",
+    "python.formatting.autopep8Args": [
+      "--max-line-length",
+      "120",
+      "--experimental"
+    ],
+    "python.linting.pylintPath": "/root/conda/bin/pylint",
+    "python.linting.pylintArgs": [
+      "--errors-only"
+    ]
+  }
 }
