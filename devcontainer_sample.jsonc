@@ -1,34 +1,33 @@
 {
-  "name": "Docker from Docker Compose",
-  // Compose file must be out of .devcontainer
-	"dockerComposeFile": "../compose.yml",
-	"service": "jupyter",
-	"workspaceFolder": "/work",
-
-  "customizations": {
-		"vscode": {
-			"extensions": [
-				"ms-python.python",
-				"ms-python.vscode-pylance",
-				"visualstudioexptteam.vscodeintellicode"
-			  ],
-			  "settings": {
-				"python.pythonPath": "/root/conda/bin/python",
-				"python.languageServer": "Pylance",
-				"jupyter.alwaysTrustNotebooks": true,
-				"python.linting.enabled": true,
-				"python.linting.pylintEnabled": true,
-				"python.formatting.autopep8Path": "/root/conda/bin/autopep8",
-				"python.formatting.autopep8Args": [
-				  "--max-line-length",
-				  "120",
-				  "--experimental"
-				],
-				"python.linting.pylintPath": "/root/conda/bin/pylint",
-				"python.linting.pylintArgs": [
-				  "--errors-only"
-				]
-			  }
-		}
-	}
+    "name": "Docker from Docker Compose",
+    // Compose file must be out of .devcontainer
+    "dockerComposeFile": "../compose.yml",
+    "service": "jupyter",
+    "workspaceFolder": "/work",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "visualstudioexptteam.vscodeintellicode"
+            ],
+            "settings": {
+                "python.pythonPath": "/root/conda/bin/python",
+                "python.languageServer": "Pylance",
+                "jupyter.alwaysTrustNotebooks": true,
+                "python.linting.enabled": true,
+                "python.linting.pylintEnabled": true,
+                "python.formatting.autopep8Path": "/root/conda/bin/autopep8",
+                "python.formatting.autopep8Args": [
+                    "--max-line-length",
+                    "120",
+                    "--experimental"
+                ],
+                "python.linting.pylintPath": "/root/conda/bin/pylint",
+                "python.linting.pylintArgs": [
+                    "--errors-only"
+                ]
+            }
+        }
+    }
 }
