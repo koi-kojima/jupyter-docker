@@ -1,0 +1,18 @@
+services:
+  jupyter:
+    image: ghcr.io/koi-kojima/jupyter:v12.5-mini
+    init: true
+    # volumes:
+    # Bind your user dir. Change to your name as you're not "koi", please.
+    #   - /home/koi/work_nlp/transformer:/work
+    container_name: user_jupyter
+    command: /bin/sh -c "while sleep 1000; do :; done"
+    environment:
+      - LOCAL_UID=1000
+      - LOCAL_GID=1000
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
