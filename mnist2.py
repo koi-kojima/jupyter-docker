@@ -7,6 +7,7 @@ import torch.optim
 import torchmetrics
 from pytorch_lightning import Trainer
 from pytorch_lightning.utilities.types import *
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
@@ -119,7 +120,7 @@ class MNISTLoader(pl.LightningDataModule):
 def main():
     parser = argparse.ArgumentParser(description="Run MNIST.")
     parser.add_argument("-b", "--batch", type=int, help="batch size (default=512)", default=512)
-    parser.add_argument("-e", "--epoch", type=int, help="epoch count", default=5)
+    parser.add_argument("-e", "--epoch", type=int, help="epoch count", default=100)
     parser.add_argument("-d", "--dataset", type=str, help="dataset name (default=MNIST)", default="MNIST")
     parser.add_argument("--device", type=str, help="device", choices=["gpu", "cpu"], default="gpu")
     args = parser.parse_args()
@@ -127,7 +128,8 @@ def main():
 
     model = MNISTModel()
     loader = MNISTLoader(args.batch, args.dataset)
-    trainer = Trainer(max_epochs=args.epoch, accelerator=args.device, devices=1)
+    early_stopping = EarlyStopping("val_loss", min_delta=0, patience=5, mode="min")
+    trainer = Trainer(max_epochs=args.epoch, accelerator=args.device, devices=1, callbacks=[early_stopping])
     trainer.fit(model, loader)
     trainer.validate(model, loader)
     trainer.test(model, loader)
