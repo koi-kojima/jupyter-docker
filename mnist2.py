@@ -118,10 +118,10 @@ class MNISTLoader(pl.LightningDataModule):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run MNIST.")
-    parser.add_argument("-b", "--batch", type=int, help="batch size (default=512)", default=512)
+    parser = argparse.ArgumentParser(description="Run MNIST.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("-b", "--batch", type=int, help="batch size", default=512)
     parser.add_argument("-e", "--epoch", type=int, help="epoch count", default=100)
-    parser.add_argument("-d", "--dataset", type=str, help="dataset name (default=MNIST)", default="MNIST")
+    parser.add_argument("-d", "--dataset", type=str, help="dataset name", default="MNIST")
     parser.add_argument("--device", type=str, help="device", choices=["gpu", "cpu"], default="gpu")
     args = parser.parse_args()
     print(f"Batch Size={args.batch}, Dataset={args.dataset}, Epoch={args.epoch}")
