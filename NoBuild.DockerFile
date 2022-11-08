@@ -46,8 +46,8 @@ SHELL ["/bin/bash", "-l", "-c"]
 # Install Python library
 RUN conda config --append channels defaults \
     && conda activate \
-    && mamba install --yes -c pytorch \
-       pytorch torchvision av torchdata cudatoolkit=${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} \
+    && mamba install --yes -c pytorch -c nvidia \
+       pytorch-cuda=${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} torchvision av torchdata \
        pytorch-lightning \
        torchmetrics \
 # The new version of grpc cause library error in launching tensorboard.
@@ -62,18 +62,18 @@ RUN conda config --append channels defaults \
        jedi jupyterlab nodejs jupyterlab-git ipywidgets \
        pylint autopep8 \
     && conda config --remove channels defaults \
-# Pip Install
-    && pip install \
-       japanize-matplotlib \
-       torchinfo \
-       pytorchvideo \
-       opencv-python \
-       opencv-contrib-python \
-       hydra-core \
-       timm \
-       classy_vision\
-       --no-cache-dir \
     && mamba clean -y --all &> /dev/null
+# Pip Install
+RUN pip install \
+        japanize-matplotlib \
+        torchinfo \
+        pytorchvideo \
+        opencv-python \
+        opencv-contrib-python \
+        hydra-core \
+        timm \
+        classy_vision\
+        --no-cache-dir
 
 # Install Jupyter lab extensions
 ENV NOTEBOOK_DIR ${HOME}/notebooks

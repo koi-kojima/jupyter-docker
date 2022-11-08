@@ -148,7 +148,7 @@ RUN sed -i -e "s/#force_color_prompt=yes/force_color_prompt=yes/g" /root/.bashrc
 RUN umask 000 && conda config --append channels defaults \
     && conda activate \
     && mamba install --yes -c pytorch -c nvidia \
-       pytorch torchvision av torchdata cudatoolkit=${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} \
+       pytorch-cuda=${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} torchvision av torchdata \
        pytorch-lightning \
        torchmetrics \
 # The new version of grpc cause library error in launching tensorboard.
