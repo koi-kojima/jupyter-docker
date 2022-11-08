@@ -170,6 +170,7 @@ RUN umask 000 && conda config --append channels defaults \
        pytorchvideo \
        hydra-core \
        timm \
+       classy_vision \
        --no-cache-dir \
     && mamba clean -y --all &> /dev/null
 ENV PATH $PATH:${HOME}/conda/bin

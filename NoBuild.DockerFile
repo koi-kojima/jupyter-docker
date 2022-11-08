@@ -71,6 +71,7 @@ RUN conda config --append channels defaults \
        opencv-contrib-python \
        hydra-core \
        timm \
+       classy_vision\
        --no-cache-dir \
     && mamba clean -y --all &> /dev/null
 
