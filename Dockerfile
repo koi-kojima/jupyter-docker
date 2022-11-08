@@ -156,12 +156,8 @@ RUN umask 000 && conda config --append channels defaults \
        scipy \
        sympy \
        pandas \
-       openpyxl \
-       pytables \
-       h5py \
        seaborn \
        scikit-learn \
-       scikit-image \
        tqdm \
        umap-learn \
        jedi jupyterlab nodejs jupyterlab-git ipywidgets \
@@ -173,6 +169,7 @@ RUN umask 000 && conda config --append channels defaults \
        torchinfo \
        pytorchvideo \
        hydra-core \
+       timm \
        --no-cache-dir \
     && mamba clean -y --all &> /dev/null
 ENV PATH $PATH:${HOME}/conda/bin

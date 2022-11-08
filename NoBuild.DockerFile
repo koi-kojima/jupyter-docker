@@ -55,11 +55,8 @@ RUN conda config --append channels defaults \
        scipy \
        sympy \
        pandas \
-       pytables \
-       h5py \
        seaborn \
        scikit-learn \
-       scikit-image \
        tqdm \
        umap-learn \
        jedi jupyterlab nodejs jupyterlab-git ipywidgets \
@@ -73,6 +70,7 @@ RUN conda config --append channels defaults \
        opencv-python \
        opencv-contrib-python \
        hydra-core \
+       timm \
        --no-cache-dir \
     && mamba clean -y --all &> /dev/null
 
