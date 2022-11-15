@@ -68,20 +68,20 @@ class MNISTModel(pl.LightningModule):
 
     def training_step(self, batch, batch_index) -> STEP_OUTPUT:
         loss = self._do_prediction(batch)
-        self.log("train_accuracy", self.accuracy)
-        self.log("train_loss", loss)
+        self.log("train_accuracy", self.accuracy, sync_dist=True)
+        self.log("train_loss", loss, sync_dist=True)
         return loss
 
     def validation_step(self, batch, batch_index) -> Optional[STEP_OUTPUT]:
         loss = self._do_prediction(batch)
-        self.log("val_accuracy", self.accuracy)
-        self.log("val_loss", loss)
+        self.log("val_accuracy", self.accuracy, sync_dist=True)
+        self.log("val_loss", loss, sync_dist=True)
         return loss
 
     def test_step(self, batch, batch_index) -> Optional[STEP_OUTPUT]:
         loss = self._do_prediction(batch)
-        self.log("test_accuracy", self.accuracy)
-        self.log("test_loss", loss)
+        self.log("test_accuracy", self.accuracy, sync_dist=True)
+        self.log("test_loss", loss, sync_dist=True)
         return loss
 
 
@@ -119,13 +119,13 @@ class MNISTLoader(pl.LightningDataModule):
         return
 
     def train_dataloader(self) -> DataLoader:
-        return DataLoader(self._train_data, batch_size=self.mini_batch, num_workers=4)
+        return DataLoader(self._train_data, batch_size=self.mini_batch, num_workers=4, persistent_workers=True)
 
     def val_dataloader(self) -> DataLoader:
-        return DataLoader(self._validation_data, batch_size=self.mini_batch, num_workers=4)
+        return DataLoader(self._validation_data, batch_size=self.mini_batch, num_workers=4, persistent_workers=True)
 
     def test_dataloader(self) -> DataLoader:
-        return DataLoader(self._test_data, batch_size=self.mini_batch, num_workers=4)
+        return DataLoader(self._test_data, batch_size=self.mini_batch, num_workers=4, persistent_workers=True)
 
 
 def main():
