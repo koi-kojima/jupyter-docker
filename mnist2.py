@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+from typing import Optional
 
 import mnist_dataset
 import pytorch_lightning as pl
@@ -89,7 +90,7 @@ class MNISTLoader(pl.LightningDataModule):
     _validation_data: Dataset
     _test_data: Dataset
 
-    def __init__(self, mini_batch: int, dataset_name: str):
+    def __init__(self, mini_batch: int, dataset_name: str, validation_ratio: float = 0.2):
         super().__init__()
         self.mini_batch = mini_batch
         self.dataset_name = dataset_name
@@ -97,15 +98,25 @@ class MNISTLoader(pl.LightningDataModule):
             transforms.ToTensor(),
             transforms.Normalize((0.5,), (0.5,)),
         ])
-        self.validation_ratio = 0.2
+        self.validation_ratio = validation_ratio
+        self.root_path = "./data"
 
     def prepare_data(self, stage: Optional[str] = None) -> None:
         dataset_class = mnist_dataset.get_mnist_dataset(self.dataset_name)
-        train_all = dataset_class(root="./data", train=True, download=True, transform=self.transform)
+        # Just download data.
+        dataset_class(root=self.root_path, train=True, download=True, transform=self.transform)
+        dataset_class(root=self.root_path, train=False, download=True, transform=self.transform)
+        return
+
+    def setup(self, stage: Optional[str] = None) -> None:
+        dataset_class = mnist_dataset.get_mnist_dataset(self.dataset_name)
+        train_all = dataset_class(root=self.root_path, train=True, download=True, transform=self.transform)
         train_size = len(train_all)
+        validation_size = int(train_size * self.validation_ratio)
         self._train_data, self._validation_data = torch.utils.data.random_split(train_all, [
-            int(train_size * (1 - self.validation_ratio)), int(train_size * self.validation_ratio)])
-        self._test_data = dataset_class(root="./data", train=False, download=True, transform=self.transform)
+            train_size - validation_size, validation_size])
+        self._test_data = dataset_class(root=self.root_path, train=False, download=True, transform=self.transform)
+        return
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(self._train_data, batch_size=self.mini_batch, num_workers=4)
@@ -124,12 +135,13 @@ def main():
     parser.add_argument("-d", "--dataset", type=str, help="dataset name", default="MNIST")
     parser.add_argument("--device", type=str, help="device", choices=["gpu", "cpu"], default="gpu")
     args = parser.parse_args()
+    device_count = max(1, torch.cuda.device_count())
     print(f"Batch Size={args.batch}, Dataset={args.dataset}, Epoch={args.epoch}")
 
     model = MNISTModel()
     loader = MNISTLoader(args.batch, args.dataset)
     early_stopping = EarlyStopping("val_loss", min_delta=0, patience=5, mode="min")
-    trainer = Trainer(max_epochs=args.epoch, accelerator=args.device, devices=1, callbacks=[early_stopping])
+    trainer = Trainer(max_epochs=args.epoch, accelerator=args.device, devices=device_count, callbacks=[early_stopping])
     trainer.fit(model, loader)
     trainer.validate(model, loader)
     trainer.test(model, loader)
