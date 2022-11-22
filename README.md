@@ -7,11 +7,11 @@ Docker image of jupyterlab with PyTorch
 See https://github.com/users/koi-kojima/packages/container/package/jupyter
 
 Postfix "cuda" means opencv is built with cuda.
-This image is based on cuda11.3 and cudnn8 from nvidia image, so PyTorch can use gpus in the image.
+This image is based on cuda11.6 from nvidia image, so PyTorch can use gpus in the image.
 
 ## Installed Libraries
 
-* Python 3.9
+* Python 3.10
 * [Anaconda](https://github.com/conda-forge/miniforge)
   * This image uses MiniForge distributiuon with mamba.
 * Numelic
