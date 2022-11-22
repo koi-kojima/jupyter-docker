@@ -20,8 +20,6 @@ This image is based on cuda11.6 from nvidia image, so PyTorch can use gpus in th
   * [sympy](https://www.sympy.org/en/index.html)
 * Table
   * [pandas](https://pandas.pydata.org/docs/index.html)
-  * [PyTables](https://pypi.org/project/tables/)
-  * [h5py](https://docs.h5py.org/en/stable/)
 * Graph
   * [matplotlib](https://matplotlib.org/stable/api/index.html)
   * [seaborn](https://seaborn.pydata.org/)
@@ -35,7 +33,8 @@ This image is based on cuda11.6 from nvidia image, so PyTorch can use gpus in th
   * [jedi](https://github.com/davidhalter/jedi)
 * Image
   * [OpenCV](https://docs.opencv.org/master/)
-    * With CUDA("-cuda" postfix version)
+    * "-cuda" postfix version includes CUDA components.
+    * "-mini" includes opencv from pip
   * [Pillow](https://pillow.readthedocs.io/en/stable/)
   * [scikit-image](https://scikit-image.org/)
   * [PyAV](https://github.com/PyAV-Org/PyAV)
@@ -45,6 +44,13 @@ This image is based on cuda11.6 from nvidia image, so PyTorch can use gpus in th
     * [torchvision](https://pytorch.org/vision/stable/index.html)
     * [Pytorch Lightning](https://www.pytorchlightning.ai/)
     * [TorchMetrics](https://torchmetrics.readthedocs.io/en/stable/)
+    * timm
+    * classy_vision
+  * umap-learn
+* ML manager
+  * hydra-core
+  * wandb
+
 
 ## How to use
 
