@@ -149,6 +149,7 @@ RUN umask 000 && conda config --append channels defaults \
     && conda activate \
     && mamba install --yes -c pytorch -c nvidia \
        pytorch-cuda=${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} torchvision av torchdata \
+       torchtext \
        pytorch-lightning \
        torchmetrics \
 # The new version of grpc cause library error in launching tensorboard.
@@ -169,6 +170,7 @@ RUN umask 000 && conda config --append channels defaults \
        torchinfo \
        pytorchvideo \
        hydra-core \
+       wandb \
        timm \
        classy_vision \
        --no-cache-dir \

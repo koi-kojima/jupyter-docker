@@ -50,6 +50,7 @@ RUN conda config --append channels defaults \
        pytorch-cuda=${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} torchvision av torchdata \
        pytorch-lightning \
        torchmetrics \
+       torchtext \
 # The new version of grpc cause library error in launching tensorboard.
        grpcio=1.42.0 \
        scipy \
@@ -71,6 +72,7 @@ RUN pip install \
         opencv-python \
         opencv-contrib-python \
         hydra-core \
+        wandb \
         timm \
         classy_vision\
         --no-cache-dir
