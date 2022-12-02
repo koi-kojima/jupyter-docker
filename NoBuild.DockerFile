@@ -1,3 +1,5 @@
+# syntax = docker/dockerfile:1
+
 ARG CUDA_VERSION=${CUDA_VERSION:-11.6.2}
 FROM nvidia/cuda:${CUDA_VERSION}-base-ubuntu20.04
 ARG CUDA_MAJOR_VERSION=${CUDA_MAJOR_VERSION:-11}
@@ -6,8 +8,9 @@ ARG CUDA_MINOR_VERSION=${CUDA_MINOR_VERSION:-6}
 ENV HOME /root
 ENV DEBIAN_FRONTEND=noninteractive
 
-# RUN sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/apt/sources.list && \
-RUN apt-get update --fix-missing && apt-get install -y \
+RUN <<EOF
+sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/apt/sources.list
+apt-get update --fix-missing && apt-get install -y \
     curl \
     ca-certificates \
     ffmpeg \
@@ -24,16 +27,20 @@ RUN apt-get update --fix-missing && apt-get install -y \
     tree \
     unzip \
     zip \
-    --no-install-recommends \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+    --no-install-recommends
+apt-get clean
+rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+EOF
 
 # SSH setting
-RUN sed -i -e "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" \
-           -e "s/#PermitEmptyPasswords no/PermitEmptyPasswords yes/" \
-           /etc/ssh/sshd_config && \
-    sed -i -e "s/root:x:/root::/g" /etc/passwd && \
-    mkdir /run/sshd
+RUN <<EOF 
+sed -i 
+    -e "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" \
+    -e "s/#PermitEmptyPasswords no/PermitEmptyPasswords yes/" \
+    /etc/ssh/sshd_config
+sed -i -e "s/root:x:/root::/g" /etc/passwd
+mkdir /run/sshd
+EOF
 
 COPY --chmod=755 ["./scripts/setup_miniforge.sh", "./scripts/jupyter_setting.sh", "/install_scripts/"]
 
@@ -44,38 +51,43 @@ RUN /install_scripts/setup_miniforge.sh
 SHELL ["/bin/bash", "-l", "-c"]
 
 # Install Python library
-RUN conda config --append channels defaults \
-    && conda activate \
-    && mamba install --yes -c pytorch -c nvidia \
-       pytorch-cuda=${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} torchvision av torchdata \
-       pytorch-lightning \
-       torchmetrics \
-       torchtext \
+RUN <<EOF
+conda config --append channels defaults
+conda activate
+mamba install --yes -c pytorch -c nvidia \
+    pytorch-cuda=${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} torchvision av torchdata \
+    pytorch-lightning \
+    torchmetrics \
+    torchtext \
 # The new version of grpc cause library error in launching tensorboard.
-       grpcio=1.42.0 \
-       scipy \
-       sympy \
-       pandas \
-       seaborn \
-       scikit-learn \
-       tqdm \
-       umap-learn \
-       jedi jupyterlab nodejs jupyterlab-git ipywidgets \
-       pylint autopep8 \
-    && conda config --remove channels defaults \
-    && mamba clean -y --all &> /dev/null
+    grpcio=1.42.0 \
+    scipy \
+    sympy \
+    pandas \
+    seaborn \
+    scikit-learn \
+    tqdm \
+    umap-learn \
+    jedi jupyterlab nodejs jupyterlab-git ipywidgets \
+    pylint autopep8
+conda config --remove channels defaults
+mamba clean -y --all &> /dev/null
+EOF
+
 # Pip Install
-RUN pip install \
-        japanize-matplotlib \
-        torchinfo \
-        pytorchvideo \
-        opencv-python \
-        opencv-contrib-python \
-        hydra-core \
-        wandb \
-        timm \
-        classy_vision\
-        --no-cache-dir
+RUN <<EOF
+pip install \
+    japanize-matplotlib \
+    torchinfo \
+    pytorchvideo \
+    opencv-python \
+    opencv-contrib-python \
+    hydra-core \
+    wandb \
+    timm \
+    classy_vision \
+    --no-cache-dir
+EOF
 
 # Install Jupyter lab extensions
 ENV NOTEBOOK_DIR ${HOME}/notebooks
@@ -84,7 +96,9 @@ RUN /install_scripts/jupyter_setting.sh
 
 COPY ./jupyter_config/ $HOME/.jupyter/lab/user-settings/@jupyterlab/
 COPY --chmod=755 ["./check_gpu.py", "./mnist*.py", "./qmnist.py", "${DEFAULT_TEMPLATE_DIR}/"]
-COPY --chmod=755 ./scripts/run_jupyter.sh $HOME/.local/bin/
+COPY --chmod=755 <<EOF $HOME/.local/bin/run_jupyter.sh
+${HOME}/conda/bin/jupyter lab --no-browser
+EOF
 
 EXPOSE 8888
 EXPOSE 22
