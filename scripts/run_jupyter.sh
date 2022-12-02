@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -e
 
-${HOME}/conda/bin/jupyter lab --no-browser
+${CONDA_DIR}/bin/jupyter lab --no-browser

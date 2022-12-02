@@ -3,8 +3,8 @@
 JUPYTER_TOKEN=password_jupyter
 set -eux
 # conda activate
-${HOME}/conda/bin/jupyter lab --generate-config
-jupyter_lab_config="$(${HOME}/conda/bin/jupyter --config-dir)/jupyter_lab_config.py"
+${CONDA_DIR}/bin/jupyter lab --generate-config
+jupyter_lab_config="$(${CONDA_DIR}/bin/jupyter --config-dir)/jupyter_lab_config.py"
 mkdir -p "${DEFAULT_TEMPLATE_DIR}"
 
 echo "c.ContentsManager.allow_hidden = True" >> ${jupyter_lab_config}
@@ -20,5 +20,5 @@ sed -i \
     ${jupyter_lab_config}
 # -e "s/# c.ServerApp.token = '<generated>'/c.ServerApp.token = '$JUPYTER_TOKEN'/"
 
-mkdir -p "$(${HOME}/conda/bin/jupyter --config-dir)/lab/user-settings/@jupyterlab"
+mkdir -p "$(${CONDA_DIR}/bin/jupyter --config-dir)/lab/user-settings/@jupyterlab"
 ln -s ${NOTEBOOK_DIR} /work
