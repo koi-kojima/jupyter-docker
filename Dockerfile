@@ -161,6 +161,7 @@ RUN umask 000 && conda config --append channels defaults \
        scikit-learn \
        tqdm \
        umap-learn \
+       lz4 \
        jedi jupyterlab nodejs jupyterlab-git ipywidgets \
        pylint autopep8 \
     && conda config --remove channels defaults \

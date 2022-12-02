@@ -68,6 +68,7 @@ mamba install --yes -c pytorch -c nvidia \
     scikit-learn \
     tqdm \
     umap-learn \
+    lz4 \
     jedi jupyterlab nodejs jupyterlab-git ipywidgets \
     pylint autopep8
 conda config --remove channels defaults
