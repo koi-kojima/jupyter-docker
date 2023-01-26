@@ -121,7 +121,7 @@ ENV PATH=/python/build/bin:$PATH
 COPY --from=python_build ["/python", "/python"]
 RUN <<EOF
 ln -s $(find /python/build/bin -name "python*" | grep -v "config") /usr/local/bin/python3
-python3 -m pip install numpy
+python3 -m pip install numpy numba
 python3 -c "import numpy"
 EOF
 
@@ -332,3 +332,28 @@ COPY --from=opencv ["/opencv", "/opencv"]
 
 ENV NOTEBOOK_DIR=/root/notebooks
 ENV DEFAULT_TEMPLATE_DIR=${NOTEBOOK_DIR}/templates
+
+# Install Python libraries
+RUN <<EOF
+python3 -m pip install torch torchvision torchdata torchtext --extra-index-url https://download.pytorch.org/whl/cu117
+python3 -m pip install \
+    classy_vision \
+    hydra-core \
+    japanize-matplotlib \
+    jupyterlab \
+    lz4 \
+    pandas \
+    pylint autopep8 \
+    pytorch-lightning \
+    scikit-learn \
+    scipy \
+    seaborn \
+    sympy \
+    timm \
+    torchinfo \
+    torchmetrics \
+    tqdm \
+    umap-learn \
+    wandb \
+    --no-cache-dir
+EOF
