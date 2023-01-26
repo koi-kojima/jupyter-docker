@@ -125,6 +125,14 @@ python3 -m pip install numpy
 python3 -c "import numpy"
 EOF
 
+# Install Python Libs
+RUN <<EOF
+apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get install -y python3-dev
+apt-get clean
+rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+EOF
+
 # Download OpenCV
 RUN <<EOF
 mkdir -p /opencv/opencv-build
@@ -206,7 +214,6 @@ CC=gcc CXX=g++ cmake \
     -D BUILD_opencv_cudawarping=ON \
     -D BUILD_opencv_cudev=ON \
     -D PYTHON_DEFAULT_EXECUTABLE=python3 \
-    -D PYTHON_EXECUTABLE=python3 \
     -D PYTHON3_INCLUDE_DIR=$(python3 -c 'from distutils.sysconfig import get_python_inc; print(get_python_inc())') \
     -D PYTHON3_NUMPY_INCLUDE_DIRS=$(python3 -c 'import numpy; print(numpy.get_include())') \
     -D PYTHON3_LIBRARIES=$(find /python/build -name "libpython3.so") \
@@ -219,4 +226,109 @@ CC=gcc CXX=g++ cmake \
 && make -j $(($(nproc) + 1)) \
 && make install
 
+python3 -m pip install /opencv/opencv-${OPEN_CV_VERSION}/build/python_loader
+python3 -c "import cv2"
 EOF
+
+FROM nvidia/cuda:11.7.1-cudnn8-runtime-ubuntu22.04 as release
+# Install libraries
+RUN <<EOF
+sed -i -e 's%http://[^ ]\+%mirror://mirrors.ubuntu.com/mirrors.txt%g' /etc/apt/sources.list
+apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    automake \
+    build-essential \
+    ccache \
+    cmake \
+    curl \
+    extra-cmake-modules \
+    ffmpeg \
+    g++ \
+    gcc \
+    git \
+    gmp-ecm \
+    libavcodec-dev \
+    libavformat-dev \
+    libboost-dev \
+    libbz2-dev \
+    libdb-dev \
+    libeigen3-dev \
+    libfaac-dev \
+    libffi-dev \
+    libgdbm-dev \
+    libgflags-dev \
+    libgl1-mesa-glx \
+    libglfw3 \
+    libjpeg-dev \
+    liblapacke-dev \
+    libleptonica-dev \
+    liblzma-dev \
+    libmp3lame-dev \
+    libncursesw5-dev \
+    libogre-1.9-dev \
+    libopencore-amrnb-dev \
+    libopencore-amrwb-dev \
+    libosmesa6-dev \
+    libpng-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    libssl-dev \
+    libswscale-dev \
+    libtbb-dev \
+    libtheora-dev \
+    libtiff5-dev \
+    libtool \
+    libv4l-dev \
+    libvorbis-dev \
+    libxine2-dev \
+    libxvidcore-dev \
+    locales \
+    mesa-utils \
+    patchelf \
+    pkg-config \
+    swig \
+    tcl-vtk7 \
+    unzip \
+    uuid-dev \
+    v4l-utils \
+    yasm \
+    zip \
+    zlib1g-dev \
+    file \
+    git \
+    less \
+    locales \
+    neofetch \
+    nkf \
+    ssh \
+    sudo \
+    gosu \
+    tree \
+    vim \
+    --no-install-recommends
+apt-get clean
+rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+EOF
+
+# SSH setting
+RUN <<EOF 
+sed -i \
+    -e "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" \
+    -e "s/#PermitEmptyPasswords no/PermitEmptyPasswords yes/" \
+    /etc/ssh/sshd_config
+sed -i -e "s/root:x:/root::/g" /etc/passwd
+mkdir /run/sshd
+EOF
+
+# Install Python
+ENV PATH=/python/build/bin:$PATH
+COPY --from=opencv ["/python/build", "/python/build"]
+RUN <<EOF
+ln -s $(find /python/build/bin -name "python*" | grep -v "config") /usr/local/bin/python3
+EOF
+
+# Install OpenCV
+COPY --from=opencv ["/opencv", "/opencv"]
+
+ENV NOTEBOOK_DIR=/root/notebooks
+ENV DEFAULT_TEMPLATE_DIR=${NOTEBOOK_DIR}/templates
