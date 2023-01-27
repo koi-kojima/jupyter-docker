@@ -103,7 +103,7 @@ def evaluate(device: torch.device, net: Net, is_gpu: bool,
         if get_loss:
             loss += loss_func(outputs, labels).item()
     if get_loss:
-        return total, correct, loss
+        return total, correct, loss / total
     else:
         return total, correct
 
@@ -154,8 +154,8 @@ def train_and_evaluate(device: torch.device, is_gpu: bool,
             test_accuracy_log.append(test_correct / test_total)
             test_loss_log.append(test_loss)
             test_epochs.append(epoch)
-            tqdm.write(f"[epoch={epoch + 1:02}] train loss={rl:.3f} test={test_loss:.3f} "
-                       f"test correct={_correct} total={_total}")
+            tqdm.write(f"[epoch={epoch + 1:02}] train loss={rl:.3f} train correct={_correct} "
+                       f"test={test_loss:.3f} test correct={test_correct} total={_total}")
     took = time.time() - started
     _print(title="Result", content=f"Learning {N} steps took {took}, average={took / N}.")
 
@@ -202,11 +202,11 @@ def make_graph(epochs, accuracy_log, device, loss_log, test_accuracy_log, test_e
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Run MNIST.")
+    parser = argparse.ArgumentParser(description="Run MNIST.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         "device", choices=["gpu", "cpu"], help="device where this program works", )
-    parser.add_argument("-b", "--batch", type=int, help="batch size (default=512)", default=512)
-    parser.add_argument("-d", "--dataset", type=str, help="dataset name (default=MNIST)", default="MNIST")
+    parser.add_argument("-b", "--batch", type=int, help="batch size", default=512)
+    parser.add_argument("-d", "--dataset", type=str, help="dataset name", default="MNIST")
     args = parser.parse_args()
 
     is_cuda_available = torch.cuda.is_available()

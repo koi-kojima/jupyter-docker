@@ -40,7 +40,8 @@ class MNISTModel(pl.LightningModule):
         )
         self.soft_max = nn.Softmax(dim=1)
         self.loss_function = nn.CrossEntropyLoss()
-        self.accuracy = torchmetrics.Accuracy()
+        self.accuracy = torchmetrics.Accuracy("multiclass", num_classes=10)
+        self.f1_score = torchmetrics.F1Score("multiclass", num_classes=10)
 
     def feature(self, x):
         x = self.conv1(x)
@@ -64,23 +65,27 @@ class MNISTModel(pl.LightningModule):
         y_prediction = self.soft_max(self.forward(x))
         loss = self.loss_function(y_prediction, y)
         self.accuracy(y_prediction, y)
+        self.f1_score(y_prediction, y)
         return loss
 
     def training_step(self, batch, batch_index) -> STEP_OUTPUT:
         loss = self._do_prediction(batch)
         self.log("train_accuracy", self.accuracy, sync_dist=True)
+        self.log("train_f1score", self.f1_score, sync_dist=True)
         self.log("train_loss", loss, sync_dist=True)
         return loss
 
     def validation_step(self, batch, batch_index) -> Optional[STEP_OUTPUT]:
         loss = self._do_prediction(batch)
         self.log("val_accuracy", self.accuracy, sync_dist=True)
+        self.log("val_f1score", self.f1_score, sync_dist=True)
         self.log("val_loss", loss, sync_dist=True)
         return loss
 
     def test_step(self, batch, batch_index) -> Optional[STEP_OUTPUT]:
         loss = self._do_prediction(batch)
         self.log("test_accuracy", self.accuracy, sync_dist=True)
+        self.log("test_f1score", self.f1_score, sync_dist=True)
         self.log("test_loss", loss, sync_dist=True)
         return loss
 
