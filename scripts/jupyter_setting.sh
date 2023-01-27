@@ -3,8 +3,17 @@
 JUPYTER_TOKEN=password_jupyter
 set -eux
 # conda activate
-${CONDA_DIR}/bin/jupyter lab --generate-config
-jupyter_lab_config="$(${CONDA_DIR}/bin/jupyter --config-dir)/jupyter_lab_config.py"
+if which jupyter ; then
+  JUPYTER_EXECUTE=$(which jupyter)
+elif [ -n "${CONDA_DIR}" ] && [ -f "${CONDA_DIR}/bin/jupyter"]; then
+  JUPYTER_EXECUTE=${CONDA_DIR}/bin/jupyter
+else
+  echo "No Jupyter command found"
+  exit 1
+fi
+$JUPYTER_EXECUTE lab --generate-config
+JUPYTER_CONFIG_DIR=$($JUPYTER_EXECUTE --config-dir)
+jupyter_lab_config="${JUPYTER_CONFIG_DIR}/jupyter_lab_config.py"
 mkdir -p "${DEFAULT_TEMPLATE_DIR}"
 
 echo "c.ContentsManager.allow_hidden = True" >> ${jupyter_lab_config}
@@ -20,5 +29,5 @@ sed -i \
     ${jupyter_lab_config}
 # -e "s/# c.ServerApp.token = '<generated>'/c.ServerApp.token = '$JUPYTER_TOKEN'/"
 
-mkdir -p "$(${CONDA_DIR}/bin/jupyter --config-dir)/lab/user-settings/@jupyterlab"
+mkdir -p "${JUPYTER_CONFIG_DIR}/lab/user-settings/@jupyterlab"
 ln -s ${NOTEBOOK_DIR} /work

@@ -341,14 +341,15 @@ python3 -m pip install \
     hydra-core \
     japanize-matplotlib \
     jupyterlab \
+    lightning \
     lz4 \
     pandas \
     pylint autopep8 \
-    pytorch-lightning \
     scikit-learn \
     scipy \
     seaborn \
     sympy \
+    tensorboardX \
     timm \
     torchinfo \
     torchmetrics \
@@ -357,3 +358,12 @@ python3 -m pip install \
     wandb \
     --no-cache-dir
 EOF
+
+# Setup Jupyter lab
+COPY --chmod=755 ["./scripts/jupyter_setting.sh", "/install_scripts/"]
+RUN /install_scripts/jupyter_setting.sh
+
+COPY ./jupyter_config/ /root/.jupyter/lab/user-settings/@jupyterlab/
+COPY --chmod=755 ["./check_gpu.py", "./mnist*.py", "./qmnist.py", "${DEFAULT_TEMPLATE_DIR}/"]
+EXPOSE 8888
+CMD ["jupyter", "lab", "--no-browser"]

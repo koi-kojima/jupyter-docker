@@ -3,12 +3,12 @@ import argparse
 from typing import Optional
 
 import mnist_dataset
-import pytorch_lightning as pl
+import lightning as pl
 import torch.optim
 import torchmetrics
-from pytorch_lightning import Trainer
-from pytorch_lightning.utilities.types import *
-from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+from lightning import Trainer
+from lightning.pytorch.utilities.types import *
+from lightning.pytorch.callbacks import EarlyStopping
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
@@ -41,7 +41,7 @@ class MNISTModel(pl.LightningModule):
         self.soft_max = nn.Softmax(dim=1)
         self.loss_function = nn.CrossEntropyLoss()
         self.accuracy = torchmetrics.Accuracy("multiclass", num_classes=10)
-        self.f1_score = torchmetrics.F1Score("multiclass", num_classes=10)
+        self.f1_score = torchmetrics.F1Score("multiclass", num_classes=10, average="macro")
 
     def feature(self, x):
         x = self.conv1(x)
@@ -70,8 +70,8 @@ class MNISTModel(pl.LightningModule):
 
     def training_step(self, batch, batch_index) -> STEP_OUTPUT:
         loss = self._do_prediction(batch)
-        self.log("train_accuracy", self.accuracy, sync_dist=True)
-        self.log("train_f1score", self.f1_score, sync_dist=True)
+        self.log("train_accuracy", self.accuracy, sync_dist=True, prog_bar=True)
+        self.log("train_f1score", self.f1_score, sync_dist=True, prog_bar=True)
         self.log("train_loss", loss, sync_dist=True)
         return loss
 
@@ -134,6 +134,7 @@ class MNISTLoader(pl.LightningDataModule):
 
 
 def main():
+    torch.set_float32_matmul_precision('high')
     parser = argparse.ArgumentParser(description="Run MNIST.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-b", "--batch", type=int, help="batch size", default=512)
     parser.add_argument("-e", "--epoch", type=int, help="epoch count", default=100)
