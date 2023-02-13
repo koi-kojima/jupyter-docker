@@ -325,6 +325,7 @@ ENV PATH=/python/build/bin:$PATH
 COPY --from=opencv ["/python/build", "/python/build"]
 RUN <<EOF
 ln -s $(find /python/build/bin -name "python*" | grep -v "config") /usr/local/bin/python3
+ln -s $(find /python/build/bin -name "pip*") /usr/local/bin/pip3
 EOF
 
 # Install OpenCV
