@@ -49,6 +49,7 @@ For all installation, see Pip.Dockerfile.
 
 Run this image without command. Jupyter launches with port 8888.
 Publish this or other port to access the instance.
+The initial workspace is located at `/work`.
 
 ### SSH
 
