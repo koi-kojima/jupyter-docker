@@ -1,20 +1,15 @@
 # jupyter-docker
 
-Docker image of jupyterlab with PyTorch
+Docker image of jupyter lab with PyTorch
 
 ## Tag List
 
 See https://github.com/users/koi-kojima/packages/container/package/jupyter
 
-Postfix "cuda" means opencv is built with cuda.
-This image is based on cuda11.6 from nvidia image, so PyTorch can use gpus in the image.
-
 ## Installed Libraries
 
 * Python 3.10
-* [Anaconda](https://github.com/conda-forge/miniforge)
-  * This image uses MiniForge distributiuon with mamba.
-* Numelic
+* Calculation
   * [numpy](https://numpy.org/doc/stable/user/index.html)
   * [scipy](https://docs.scipy.org/doc/scipy/reference/)
   * [sympy](https://www.sympy.org/en/index.html)
@@ -27,45 +22,39 @@ This image is based on cuda11.6 from nvidia image, so PyTorch can use gpus in th
 * Jupyter
   * [Jupyter Lab](https://jupyterlab.readthedocs.io/en/stable/)
     * Version 3.x
-    * NodeJS is also installed via conda.
-  * [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/)
-  * [jupyterlab-git](https://github.com/jupyterlab/jupyterlab-git)
-  * [jedi](https://github.com/davidhalter/jedi)
 * Image
   * [OpenCV](https://docs.opencv.org/master/)
-    * "-cuda" postfix version includes CUDA components.
-    * "-mini" includes opencv from pip
+    * Built for GPU
   * [Pillow](https://pillow.readthedocs.io/en/stable/)
-  * [scikit-image](https://scikit-image.org/)
-  * [PyAV](https://github.com/PyAV-Org/PyAV)
 * Machine Learning
   * [scikit-learn](https://scikit-learn.org/stable/user_guide.html)
   * [PyTorch(with CUDA)](https://pytorch.org/)
     * [torchvision](https://pytorch.org/vision/stable/index.html)
-    * [Pytorch Lightning](https://www.pytorchlightning.ai/)
+    * [lightning](https://www.pytorchlightning.ai/)
     * [TorchMetrics](https://torchmetrics.readthedocs.io/en/stable/)
+    * [torchinfo](https://github.com/TylerYep/torchinfo)
     * timm
     * classy_vision
-  * umap-learn
+  * [umap-learn](https://umap-learn.readthedocs.io/en/latest/)
+  * tensorboardX
 * ML manager
   * hydra-core
   * wandb
 
+For all installation, see Pip.Dockerfile.
 
 ## How to use
 
 ### Jupyter Lab
-Edit [`docker_run.sh`](https://github.com/koi-kojima/jupyter-docker/blob/main/docker_run.sh) to change the image version and add volume mounts.
-Then run the script to create container.
 
-Execute `docker ps` to see the port to access jupyter in docker.
-**Be careful not to bind sensitive files such as /etc. The user in container can access and modify the file.**
+Run this image without command. Jupyter launches with port 8888.
+Publish this or other port to access the instance.
 
 ### SSH
-Edit [`docker_run.sh`](https://github.com/koi-kojima/jupyter-docker/blob/main/docker_run.sh) to expose port 22.
-Then run the script and connect to the container.
-Username is "dev" and no password is required.
-**Be careful not to bind sensitive files such as /etc. The user in container can access and modify the file.**
+
+You can access this container via SSH.
+Run `/usr/sbin/sshd` to start SSH server.
+Root has no password.
 
 ## Improvements
 
@@ -80,6 +69,6 @@ Username is "dev" and no password is required.
   * Use with care because it allows access from outside of your machine.
 * SSH server
   * Start by executing `/usr/sbin/sshd`.
-  * "-cpu\_cv" image will start ssh server in default.
 * User permission
-  * When the lab starts, the script will execute `useradd` command to change id of user in container. It will solve permission problem if you bind local file into container. ("-cuda" only)
+  * Sorry, this improvement was removed.
+  * For VS Code user, this doesn't affect user experience.
